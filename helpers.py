@@ -4,7 +4,8 @@ def allowed_vlan_to_list(vlanlist):
     for vlan in split:
         if "-" in vlan:
             begin, end = vlan.split("-")
-            outlist = outlist + tuple(range(int(begin), int(end)))
+            newvlans = tuple(range(int(begin), int(end)+1))
+            outlist = outlist + newvlans
         else:
             outlist = outlist + (int(vlan), )
     return outlist
