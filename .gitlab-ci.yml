@@ -7,7 +7,7 @@ before_script:
 stages:
   - Run tests
 
-pylint:
+unittest:
   stage: Run tests
   script:
   - python test*.py
