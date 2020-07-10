@@ -108,15 +108,17 @@ class TestParseSVI(unittest.TestCase):
         output = {3: {"name": "FRONT-END",
                       "vrf": "VRF-VINTAGE",
                       "l3": {"ip_address": "172.26.54.62",
-                             "netmask": "255.255.255.192"},
+                             "netmask": "255.255.255.192",
+                             "shutdown": False},
                       "description": "SRG-FRONT-END_NEW_SYS-SAT-CMS-W2K",
-                      "shutdown": False},
+                      },
                   4: {"name": "EX_CED_SDM",
                       "vrf": "VRF-VINTAGE",
                       "l3": {"ip_address": "172.22.176.9",
-                             "netmask": "255.255.252.0"},
+                             "netmask": "255.255.252.0",
+                             "shutdown": False},
                       "description": "***VLAN_CED_CAVASSI***",
-                      "shutdown": False}}
+                      }}
 
         assert parse_svi(test_data) == output
 
@@ -136,9 +138,10 @@ class TestParseSVI(unittest.TestCase):
         output = {3: {"name": "FRONT-END",
                       "vrf": "VRF-VINTAGE",
                       "l3": {"ip_address": "172.26.54.41",
-                             "netmask": "255.255.255.192"},
+                             "netmask": "255.255.255.192",
+                             "shutdown": False},
                       "description": "SRG-FRONT-END_NEW_SYS-SAT-CMS-W2K",
-                      "shutdown": False}}
+                      }}
 
     def test_parse_svi_shutdown(self):
         config = ["vlan 3",
@@ -156,9 +159,10 @@ class TestParseSVI(unittest.TestCase):
         output = {3: {"name": "FRONT-END",
                       "vrf": "VRF-VINTAGE",
                       "l3": {"ip_address": "172.26.54.41",
-                             "netmask": "255.255.255.192"},
+                             "netmask": "255.255.255.192",
+                             "shutdown": True},
                       "description": "SRG-FRONT-END_NEW_SYS-SAT-CMS-W2K",
-                      "shutdown": True}}
+                      }}
         assert parse_svi(test_data) == output
 
     def test_parse_svi_no_vrf(self):
@@ -176,9 +180,10 @@ class TestParseSVI(unittest.TestCase):
         output = {3: {"name": "FRONT-END",
                       "vrf": "default",
                       "l3": {"ip_address": "172.26.54.41",
-                             "netmask": "255.255.255.192"},
+                             "netmask": "255.255.255.192",
+                             "shutdown": False},
                       "description": "SRG-FRONT-END_NEW_SYS-SAT-CMS-W2K",
-                      "shutdown": True}}
+                      }}
         assert parse_svi(test_data) == output
 
     def test_parse_svi_no_ip(self):
@@ -191,8 +196,9 @@ class TestParseSVI(unittest.TestCase):
         output = {1: {"name": "FRONT-END",
                       "vrf": "default",
                       "l3": {"ip_address": "172.26.54.41",
-                             "netmask": "255.255.255.192"},
-                      "shutdown": True}}
+                             "netmask": "255.255.255.192",
+                             "shutdown": False},
+                      }}
         assert parse_svi(test_data) == output
 
 
