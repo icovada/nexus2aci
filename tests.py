@@ -39,7 +39,7 @@ class TestParseVlanL2(unittest.TestCase):
 
         output = {3: {"name": "FRONT-END"},
                   4: {"name": "EX_CED_SDM"},
-                  6: {"name": "Back_End-New"},
+                  6: {"name": "Back-End-New"},
                   9: {"name": "Front-End-NEW"}}
 
         assert parse_vlan_l2(test_data) == output
