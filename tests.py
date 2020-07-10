@@ -108,7 +108,8 @@ class TestParseSVI(unittest.TestCase):
 
         test_data = self.CiscoConfParse(config)
 
-        output = {3: {"name": "FRONT-END",
+        output = {1: {},
+                  3: {"name": "FRONT-END",
                       "vrf": "VRF-VINTAGE",
                       "l3": {"ip_address": "172.26.54.62",
                              "netmask": "255.255.255.192",
@@ -138,7 +139,8 @@ class TestParseSVI(unittest.TestCase):
 
         test_data = self.CiscoConfParse(config)
 
-        output = {3: {"name": "FRONT-END",
+        output = {1: {},
+                  3: {"name": "FRONT-END",
                       "vrf": "VRF-VINTAGE",
                       "l3": {"ip_address": "172.26.54.41",
                              "netmask": "255.255.255.192",
@@ -160,7 +162,8 @@ class TestParseSVI(unittest.TestCase):
 
         test_data = self.CiscoConfParse(config)
 
-        output = {3: {"name": "FRONT-END",
+        output = {1: {},
+                  3: {"name": "FRONT-END",
                       "vrf": "VRF-VINTAGE",
                       "l3": {"ip_address": "172.26.54.41",
                              "netmask": "255.255.255.192",
@@ -181,7 +184,8 @@ class TestParseSVI(unittest.TestCase):
 
         test_data = self.CiscoConfParse(config)
 
-        output = {3: {"name": "FRONT-END",
+        output = {1: {},
+                  3: {"name": "FRONT-END",
                       "vrf": "default",
                       "l3": {"ip_address": "172.26.54.41",
                              "netmask": "255.255.255.192",
@@ -197,11 +201,8 @@ class TestParseSVI(unittest.TestCase):
 
         test_data = self.CiscoConfParse(config)
 
-        output = {1: {"name": "FRONT-END",
-                      "vrf": "default",
-                      "l3": {"ip_address": "172.26.54.41",
-                             "netmask": "255.255.255.192",
-                             "shutdown": False},
+        output = {1: {"vrf": "default",
+                      "l3": {"shutdown": False},
                       }}
         assert parse_svi(test_data) == output
 
