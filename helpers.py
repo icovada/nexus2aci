@@ -1,3 +1,5 @@
+import re
+
 def allowed_vlan_to_list(vlanlist):
     split = vlanlist.split(",")
     outlist = ()
@@ -17,7 +19,7 @@ def parse_vlan_l2(conf):
         vlan_id = int(vlan.text.split()[-1])
         l2dict[vlan_id] = {}
         for vlan in vlan.re_search_children("name"):
-            vlan_name = vlan.text.replace(" name ", "").strip()
-            l2dict[vlan_id] = {"name": vlan_name}
+            vlan_name = re.search("name (.*)", vlan.text)
+            l2dict[vlan_id] = {"name": vlan_name.groups()[0]}
 
     return l2dict
