@@ -38,7 +38,8 @@ class TestParseVlanL2(unittest.TestCase):
 
         test_data = self.CiscoConfParse(config)
 
-        output = {3: {"name": "FRONT-END"},
+        output = {1: {},
+                  3: {"name": "FRONT-END"},
                   4: {"name": "EX_CED_SDM"},
                   6: {"name": "Back-End-New"},
                   9: {"name": "Front-End-NEW"}}
@@ -50,7 +51,8 @@ class TestParseVlanL2(unittest.TestCase):
 
         test_data = self.CiscoConfParse(config)
 
-        output = {3: {}}
+        output = {1: {},
+                  3: {}}
 
         assert parse_vlan_l2(test_data) == output
 
@@ -62,7 +64,8 @@ class TestParseVlanL2(unittest.TestCase):
 
         test_data = self.CiscoConfParse(config)
 
-        output = {3: {"name": "name"},
+        output = {1: {},
+                  3: {"name": "name"},
                   4: {"name": "anothername"}}
 
         assert parse_vlan_l2(test_data) == output
@@ -142,6 +145,7 @@ class TestParseSVI(unittest.TestCase):
                              "shutdown": False},
                       "description": "SRG-FRONT-END_NEW_SYS-SAT-CMS-W2K",
                       }}
+        assert parse_svi(test_data) == output
 
     def test_parse_svi_shutdown(self):
         config = ["vlan 3",
