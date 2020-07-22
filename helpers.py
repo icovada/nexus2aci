@@ -36,6 +36,9 @@ def parse_svi(conf):
         # Cut away "interface Vlan"
         svi_id = int(svi.re_match(r"interface Vlan(\d{1,4})$"))
 
+        if svi_id not in svidict:
+            svidict[svi_id] = {}
+
         svidict[svi_id]["vrf"] = "default"
         for vrf in svi.re_search_children("vrf member"):
             vrf_name = vrf.re_match("vrf member (.*)")
