@@ -16,7 +16,7 @@ def allowed_vlan_to_list(vlanlist):
 
 
 def parse_vlan_l2(conf):
-    vlans = conf.find_objects(r"^vlan \d")
+    vlans = conf.find_objects(r"^vlan \d{1,4}$")
     l2dict = {1: {}}
     for vlan in vlans:
         vlan_id = int(vlan.text.split()[-1])
