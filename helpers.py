@@ -110,20 +110,22 @@ def parse_physical_interface(conf):
                             "mode": mode})
 
         if len(eth_path) == 2:
-            if not isinstance(intdict[eth_path[0]], dict):
+            try:
+                assert isinstance(intdict[eth_path[0]], dict)
+            except (AssertionError, KeyError):
                 intdict[eth_path[0]] = {}
             
             intdict[eth_path[0]].update({eth_path[1]: thisint})
 
         if len(eth_path) == 3:
             try:
-                assert not isinstance(intdict[eth_path[0]], dict)
-            except KeyError:
+                assert isinstance(intdict[eth_path[0]], dict)
+            except (AssertionError, KeyError):
                 intdict[eth_path[0]] = {}
             
             try:
-                assert not isinstance(intdict[eth_path[0]][eth_path[1]], dict)
-            except KeyError:
+                assert isinstance(intdict[eth_path[0]][eth_path[1]], dict)
+            except (AssertionError, KeyError):
                 intdict[eth_path[0]][eth_path[1]] = {}
             
             intdict[eth_path[0]][eth_path[1]].update({eth_path[2]: thisint})
