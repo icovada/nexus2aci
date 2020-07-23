@@ -85,12 +85,6 @@ def parse_physical_interface(conf):
         for line in eth.re_search_children("switchport mode"):
             mode = line.re_match(r"switchport mode (\w*)$")
 
-        for line in eth.re_search_children("switchport trunk allowed vlan"):
-            allowed_vlan = line.re_match(
-                r"switchport trunk allowed vlan (.*)$")
-            allowed_vlan_list = allowed_vlan_to_list(allowed_vlan)
-            thisint.update({"allowed_vlan": allowed_vlan_list})
-
         for line in eth.re_search_children("switchport trunk native vlan"):
             native_vlan = int(line.re_match(r"switchport trunk native vlan (.*)$"))
             thisint.update({"native_vlan": native_vlan})
@@ -98,6 +92,17 @@ def parse_physical_interface(conf):
         for line in eth.re_search_children("switchport access vlan"):
             native_vlan = int(line.re_match(r"switchport access vlan (.*)$"))
             thisint.update({"native_vlan": native_vlan})
+
+        for line in eth.re_search_children("switchport trunk allowed vlan"):
+            allowed_vlan = line.re_match(
+                r"switchport trunk allowed vlan (.*)$")
+            allowed_vlan_list = allowed_vlan_to_list(allowed_vlan)
+
+            if "native_vlan" in locals():
+                allowed_vlan_list.remove(native_vlan)
+
+            if len(allowed_vlan_list) != 0:
+                thisint.update({"allowed_vlan": allowed_vlan_list})
 
         if "native_vlan" not in thisint:
             if mode == "access":

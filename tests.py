@@ -239,5 +239,19 @@ class TestParsePhyInt(unittest.TestCase):
 
         assert parse_physical_interface(test_data) == output
 
+    def test_trunk_port_1_vlan(self):
+        config = ["interface Ethernet100/1/8",
+                  "  switchport mode trunk",
+                  "  switchport trunk allowed vlan 300",
+                  "  switchport trunk native vlan 300",
+                  "  no shutdown"]
+
+        test_data = self.CiscoConfParse(config)
+
+        output = {100: {1: {8: {"native_vlan": 300,
+                                }}}}
+
+        assert parse_physical_interface(test_data) == output
+
 if __name__ == '__main__':
     unittest.main()
