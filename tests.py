@@ -3,6 +3,7 @@ import unittest
 from helpers import allowed_vlan_to_list
 from helpers import parse_vlan_l2
 from helpers import parse_svi
+from helpers import parse_physical_interface
 
 
 class TestAllowedVlanToList(unittest.TestCase):
@@ -205,6 +206,25 @@ class TestParseSVI(unittest.TestCase):
                       "l3": {"shutdown": False},
                       }}
         assert parse_svi(test_data) == output
+
+
+class TestParsePhyInt(unittest.TestCase):
+    from ciscoconfparse import CiscoConfParse
+
+    def test_access_port(self):
+        config = ["interface Ethernet100/1/8",
+                  "  description SNSV01021_nic0_3",
+                  "  switchport access vlan 300",
+                  "  spanning-tree port type edge",
+                  "  no shutdown"]
+
+        test_data = self.CiscoConfParse(config)
+
+        output = {100: {1: {8: {"description": "SNSV01021_nic0_3",
+                                "native_vlan": 300
+                                }}}}
+
+        assert parse_physical_interface(test_data) == output
 
 
 if __name__ == '__main__':

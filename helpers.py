@@ -67,3 +67,62 @@ def parse_svi(conf):
             svidict[svi_id].update({"description": description})
 
     return svidict
+
+
+def parse_physical_interface(conf):
+    phy_int = conf.find_objects(r"^interface Ethernet\d")
+    intdict = {}
+    for eth in phy_int:
+        eth_id = eth.text.strip().replace("interface Ethernet", "")
+        eth_path = [int(x) for x in eth_id.split("/")]
+
+        thisint = {}
+
+        for line in eth.re_search_children("description"):
+            description = line.re_match(r"description (.*)$")
+            thisint.update({"description": description})
+
+        for line in eth.re_search_children("switchport trunk allowed vlan"):
+            allowed_vlan = line.re_match(
+                r"switchport trunk allowed vlan (.*)$")
+            allowed_vlan_list = allowed_vlan_to_list(allowed_vlan)
+            thisint.update({"allowed_vlan": allowed_vlan_list})
+
+        for line in eth.re_search_children("switchport trunk native vlan"):
+            native_vlan = int(line.re_match(r"switchport trunk native vlan (.*)$"))
+            thisint.update({"native_vlan": native_vlan})
+
+        for line in eth.re_search_children("switchport access vlan"):
+            native_vlan = int(line.re_match(r"switchport access vlan (.*)$"))
+            thisint.update({"native_vlan": native_vlan})
+
+        if "native_vlan" not in thisint:
+            thisint["native_vlan"] = 1
+
+        for line in eth.re_search_children("channel-group"):
+            channel_group = line.re_match(r"channel-group (\d*) mode")
+            mode = line.re_match(r"mode (\w*)")
+            thisint.update({"channel_group": channel_group,
+                            "mode": mode})
+
+        if len(eth_path) == 2:
+            if not isinstance(intdict[eth_path[0]], dict):
+                intdict[eth_path[0]] = {}
+            
+            intdict[eth_path[0]].update({eth_path[1]: thisint})
+
+        if len(eth_path) == 3:
+            try:
+                assert not isinstance(intdict[eth_path[0]], dict)
+            except KeyError:
+                intdict[eth_path[0]] = {}
+            
+            try:
+                assert not isinstance(intdict[eth_path[0]][eth_path[1]], dict)
+            except KeyError:
+                intdict[eth_path[0]][eth_path[1]] = {}
+            
+            intdict[eth_path[0]][eth_path[1]].update({eth_path[2]: thisint})
+
+
+    return intdict
