@@ -68,15 +68,11 @@ def parse_svi(conf):
 
     return svidict
 
-
-def parse_physical_interface(conf):
-    phy_int = conf.find_objects(r"^interface Ethernet\d")
-    return parse_switched_interface(phy_int)
-
 def parse_switched_interface(interfaces):
     intdict = {}
     for eth in interfaces:
-        eth_id = eth.text.strip().replace("interface Ethernet", "")
+        eth_type = eth.re_match(r"interface ([A-Za-z\-]*)(\/*\d*)+")
+        eth_id = eth.re_match(r"interface [A-Za-z\-]*((\/*\d*)+)")
         eth_path = [int(x) for x in eth_id.split("/")]
 
         thisint = {}
@@ -117,26 +113,31 @@ def parse_switched_interface(interfaces):
             thisint.update({"channel_group": channel_group,
                             "mode": mode})
 
+        try:
+            assert isinstance(intdict[eth_type], dict)
+        except (AssertionError, KeyError):
+            intdict[eth_type] = {}
+
         if len(eth_path) == 2:
             try:
-                assert isinstance(intdict[eth_path[0]], dict)
+                assert isinstance(intdict[eth_type][eth_path[0]], dict)
             except (AssertionError, KeyError):
-                intdict[eth_path[0]] = {}
+                intdict[eth_type][eth_path[0]] = {}
             
-            intdict[eth_path[0]].update({eth_path[1]: thisint})
+            intdict[eth_type][eth_path[0]].update({eth_path[1]: thisint})
 
         if len(eth_path) == 3:
             try:
-                assert isinstance(intdict[eth_path[0]], dict)
+                assert isinstance(intdict[eth_type][eth_path[0]], dict)
             except (AssertionError, KeyError):
-                intdict[eth_path[0]] = {}
+                intdict[eth_type][eth_path[0]] = {}
             
             try:
-                assert isinstance(intdict[eth_path[0]][eth_path[1]], dict)
+                assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]], dict)
             except (AssertionError, KeyError):
-                intdict[eth_path[0]][eth_path[1]] = {}
+                intdict[eth_type][eth_path[0]][eth_path[1]] = {}
             
-            intdict[eth_path[0]][eth_path[1]].update({eth_path[2]: thisint})
+            intdict[eth_type][eth_path[0]][eth_path[1]].update({eth_path[2]: thisint})
 
 
     return intdict

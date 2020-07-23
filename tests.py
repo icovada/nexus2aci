@@ -221,9 +221,9 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {100: {1: {8: {"description": "SNSV01021_nic0_3",
+        output = {"Ethernet": {100: {1: {8: {"description": "SNSV01021_nic0_3",
                                 "native_vlan": 300
-                                }}}}
+                               }}}}}
 
         assert parse_switched_interface(test_data) == output
 
@@ -236,8 +236,8 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {100: {1: {8: {"allowed_vlan": [300, 301, 302, 303],
-                                }}}}
+        output = {"Ethernet": {100: {1: {8: {"allowed_vlan": [300, 301, 302, 303],
+                                }}}}}
 
         assert parse_switched_interface(test_data) == output
 
@@ -251,8 +251,8 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {100: {1: {8: {"native_vlan": 300,
-                                }}}}
+        output = {"Ethernet": {100: {1: {8: {"native_vlan": 300,
+                                }}}}}
 
         assert parse_switched_interface(test_data) == output
 
