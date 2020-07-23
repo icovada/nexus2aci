@@ -116,7 +116,7 @@ def parse_switched_interface(interfaces):
             thisint.update({"channel_group": int(channel_group),
                             "mode": mode})
 
-        for line in eth.re_search_children("vpc"):
+        for line in eth.re_search_children(r"vpc \d"):
             vpc_id = line.re_match(r"vpc (\d*)$")
             thisint.update({"vpc": int(vpc_id)})
 
