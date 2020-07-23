@@ -71,8 +71,11 @@ def parse_svi(conf):
 
 def parse_physical_interface(conf):
     phy_int = conf.find_objects(r"^interface Ethernet\d")
+    return parse_switched_interface(phy_int)
+
+def parse_switched_interface(interfaces):
     intdict = {}
-    for eth in phy_int:
+    for eth in interfaces:
         eth_id = eth.text.strip().replace("interface Ethernet", "")
         eth_path = [int(x) for x in eth_id.split("/")]
 

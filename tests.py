@@ -3,7 +3,7 @@ import unittest
 from helpers import allowed_vlan_to_list
 from helpers import parse_vlan_l2
 from helpers import parse_svi
-from helpers import parse_physical_interface
+from helpers import parse_switched_interface
 
 
 class TestAllowedVlanToList(unittest.TestCase):
@@ -208,7 +208,7 @@ class TestParseSVI(unittest.TestCase):
         assert parse_svi(test_data) == output
 
 
-class TestParsePhyInt(unittest.TestCase):
+class TestParseSwitchedInt(unittest.TestCase):
     from ciscoconfparse import CiscoConfParse
 
     def test_access_port(self):
@@ -218,13 +218,14 @@ class TestParsePhyInt(unittest.TestCase):
                   "  spanning-tree port type edge",
                   "  no shutdown"]
 
-        test_data = self.CiscoConfParse(config)
+        test_conf = self.CiscoConfParse(config)
+        test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
         output = {100: {1: {8: {"description": "SNSV01021_nic0_3",
                                 "native_vlan": 300
                                 }}}}
 
-        assert parse_physical_interface(test_data) == output
+        assert parse_switched_interface(test_data) == output
 
     def test_trunk_port(self):
         config = ["interface Ethernet100/1/8",
@@ -232,12 +233,13 @@ class TestParsePhyInt(unittest.TestCase):
                   "  switchport trunk allowed vlan 300-302,303",
                   "  no shutdown"]
 
-        test_data = self.CiscoConfParse(config)
+        test_conf = self.CiscoConfParse(config)
+        test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
         output = {100: {1: {8: {"allowed_vlan": [300, 301, 302, 303],
                                 }}}}
 
-        assert parse_physical_interface(test_data) == output
+        assert parse_switched_interface(test_data) == output
 
     def test_trunk_port_1_vlan(self):
         config = ["interface Ethernet100/1/8",
@@ -246,12 +248,13 @@ class TestParsePhyInt(unittest.TestCase):
                   "  switchport trunk native vlan 300",
                   "  no shutdown"]
 
-        test_data = self.CiscoConfParse(config)
+        test_conf = self.CiscoConfParse(config)
+        test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
         output = {100: {1: {8: {"native_vlan": 300,
                                 }}}}
 
-        assert parse_physical_interface(test_data) == output
+        assert parse_switched_interface(test_data) == output
 
 if __name__ == '__main__':
     unittest.main()
