@@ -111,7 +111,7 @@ def parse_switched_interface(interfaces):
                 thisint["native_vlan"] = 1
 
         for line in eth.re_search_children("channel-group"):
-            channel_group = line.re_match(r"channel-group (\d*) mode")
+            channel_group = line.re_match(r"channel-group (\d*)")
             mode = line.re_match(r"mode (\w*)")
             thisint.update({"channel_group": int(channel_group),
                             "mode": mode})
