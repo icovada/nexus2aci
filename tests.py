@@ -256,5 +256,37 @@ class TestParseSwitchedInt(unittest.TestCase):
 
         assert parse_switched_interface(test_data) == output
 
+    def test_portchannel(self):
+        config = ["interface Ethernet100/1/8",
+                  "  switchport mode trunk",
+                  "  switchport trunk allowed vlan 300",
+                  "  channel-group 30 mode active",
+                  "  no shutdown"]
+
+        test_conf = self.CiscoConfParse(config)
+        test_data = test_conf.find_objects(r"^interface Ethernet\d")
+
+        output = {"Ethernet": {100: {1: {8: {"allowed_vlan": [300],
+                                             "channel_group": 30,
+                                             "mode": "active"
+                                }}}}}
+
+        assert parse_switched_interface(test_data) == output
+
+    def test_vpc(self):
+        config = ["interface port-channel40",
+                  "  switchport mode trunk",
+                  "  switchport trunk allowed vlan 2201,2203",
+                  "  spanning-tree port type edge",
+                  "  speed 10000",
+                  "  vpc 40"]
+
+        test_conf = self.CiscoConfParse(config)
+        test_data = test_conf.find_objects(r"^interface port-channel\d")
+
+        output = {"port-channel": {40: {"allowed_vlan": [2201, 2203],
+                                        "vpc": 40}}}
+
+        assert parse_switched_interface(test_data) == output
 if __name__ == '__main__':
     unittest.main()

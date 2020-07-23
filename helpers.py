@@ -98,7 +98,10 @@ def parse_switched_interface(interfaces):
             allowed_vlan_list = allowed_vlan_to_list(allowed_vlan)
 
             if "native_vlan" in locals():
-                allowed_vlan_list.remove(native_vlan)
+                try:
+                    allowed_vlan_list.remove(native_vlan)
+                except ValueError:
+                    pass
 
             if len(allowed_vlan_list) != 0:
                 thisint.update({"allowed_vlan": allowed_vlan_list})
@@ -110,13 +113,25 @@ def parse_switched_interface(interfaces):
         for line in eth.re_search_children("channel-group"):
             channel_group = line.re_match(r"channel-group (\d*) mode")
             mode = line.re_match(r"mode (\w*)")
-            thisint.update({"channel_group": channel_group,
+            thisint.update({"channel_group": int(channel_group),
                             "mode": mode})
+
+        for line in eth.re_search_children("vpc"):
+            vpc_id = line.re_match(r"vpc (\d*)$")
+            thisint.update({"vpc": int(vpc_id)})
 
         try:
             assert isinstance(intdict[eth_type], dict)
         except (AssertionError, KeyError):
             intdict[eth_type] = {}
+
+        if len(eth_path) == 1:
+            try:
+                assert isinstance(intdict[eth_type], dict)
+            except (AssertionError, KeyError):
+                intdict[eth_type] = {}
+
+            intdict[eth_type].update({eth_path[0]: thisint})
 
         if len(eth_path) == 2:
             try:
