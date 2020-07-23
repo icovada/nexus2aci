@@ -10,17 +10,17 @@ class TestAllowedVlanToList(unittest.TestCase):
 
     def test_only_commas(self):
         test_data = "1,2,3,4,5"
-        output = (1, 2, 3, 4, 5)
+        output = [1, 2, 3, 4, 5]
         assert allowed_vlan_to_list(test_data) == output
 
     def test_only_ranges(self):
         test_data = "1-5"
-        output = (1, 2, 3, 4, 5)
+        output = [1, 2, 3, 4, 5]
         assert allowed_vlan_to_list(test_data) == output
 
     def test_comma_and_range(self):
         test_data = "1,2,3-5"
-        output = (1, 2, 3, 4, 5)
+        output = [1, 2, 3, 4, 5]
         assert allowed_vlan_to_list(test_data) == output
 
 
@@ -234,7 +234,7 @@ class TestParsePhyInt(unittest.TestCase):
 
         test_data = self.CiscoConfParse(config)
 
-        output = {100: {1: {8: {"allowed_vlan": (300, 301, 302, 303),
+        output = {100: {1: {8: {"allowed_vlan": [300, 301, 302, 303],
                                 }}}}
 
         assert parse_physical_interface(test_data) == output

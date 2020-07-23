@@ -4,14 +4,14 @@ import ipaddress
 
 def allowed_vlan_to_list(vlanlist):
     split = vlanlist.split(",")
-    outlist = ()
+    outlist = []
     for vlan in split:
         if "-" in vlan:
             begin, end = vlan.split("-")
-            newvlans = tuple(range(int(begin), int(end)+1))
+            newvlans = list(range(int(begin), int(end)+1))
             outlist = outlist + newvlans
         else:
-            outlist = outlist + (int(vlan), )
+            outlist.append(int(vlan))
     return outlist
 
 
