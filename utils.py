@@ -3,7 +3,7 @@ def traverse_dict(dict, path):
     if len(path) == 0:
         return dict
     else:
-        return traverse_dict[path])
+        return traverse_dict[path]
 
 def find_key(d, value):
     for k,v in d.items():
