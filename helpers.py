@@ -113,8 +113,14 @@ def parse_switched_interface(interfaces):
         for line in eth.re_search_children("channel-group"):
             channel_group = line.re_match(r"channel-group (\d*)")
             mode = line.re_match(r"mode (\w*)")
+            if mode == 'active':
+                lacp = True
+            elif mode == '':
+                lacp = False
+            else:
+                raise ValueError("What is PaGP still doing in prod")
             thisint.update({"channel_group": int(channel_group),
-                            "mode": mode})
+                            "lacp": lacp})
 
         for line in eth.re_search_children(r"vpc \d"):
             vpc_id = line.re_match(r"vpc (\d*)$")
