@@ -42,8 +42,8 @@ for tenant in tenant_list:
     
     tenantdict = {'name': tenant,
                   'app': allapp,
-                  'bd': thistenant.['BD'].unique().tolist(),
-                  'vrf': thistenant.['VRF.1'].unique().tolist()}
+                  'bd': thistenant['BD'].unique().tolist(),
+                  'vrf': thistenant['VRF.1'].unique().tolist()}
     alltenant.append(tenantdict)
 
 fabric = {'tenant': alltenant}
