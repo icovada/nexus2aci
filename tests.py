@@ -312,5 +312,21 @@ class TestParseSwitchedInt(unittest.TestCase):
                                         "vpc": 40}}}
 
         assert parse_switched_interface(test_data) == output
+
+
+    def test_fexfabric(self):
+        config = ["interface Ethernet1/4",
+                  "  switchport mode fex-fabric",
+                  "  fex-associate 300",
+                  "  channel-group 300"]
+
+        test_conf = self.CiscoConfParse(config)
+        test_data = test_conf.find_objects(r"^interface port-channel\d")
+
+        output = {}
+
+        assert parse_switched_interface(test_data) == output
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -79,7 +79,9 @@ def parse_svi(conf, svidict):
 
 def parse_switched_interface(interfaces):
     intdict = {}
+    fexlist = []
     for eth in interfaces:
+        # Split interface name in various pieces
         eth_type = eth.re_match(r"interface ([A-Za-z\-]*)(\/*\d*)+")
         eth_id = eth.re_match(r"interface [A-Za-z\-]*((\/*\d*)+)")
         eth_path = [int(x) for x in eth_id.split("/")]
@@ -90,8 +92,19 @@ def parse_switched_interface(interfaces):
             description = line.re_match(r"description (.*)$")
             thisint.update({"description": description})
 
+        is_fex = False
         for line in eth.re_search_children("switchport mode"):
-            mode = line.re_match(r"switchport mode (\w*)$")
+            mode = line.re_match(r"switchport mode (.*)$")
+            if mode == 'fex-fabric':
+                for line in eth.re_search_children("fex associate"):
+                    fex = line.re_match(r"fex associate (\d*)")
+                    if fex not in fexlist:
+                        fexlist.append(fex)
+                    
+                    is_fex = True
+
+        if is_fex:
+            continue
 
         for line in eth.re_search_children("switchport trunk native vlan"):
             native_vlan = int(line.re_match(r"switchport trunk native vlan (.*)$"))
