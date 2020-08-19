@@ -230,9 +230,10 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {"Ethernet": {100: {1: {8: {"description": "SNSV01021_nic0_3",
-                                "native_vlan": 300
-                               }}}}}
+        output = {'local': {"Ethernet": {100: {1: {8: {"description": "SNSV01021_nic0_3",
+                                                       "native_vlan": 300
+                            }}}}},
+                  'fex': {}}
 
         assert parse_switched_interface(test_data) == output
 
@@ -245,8 +246,9 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {"Ethernet": {100: {1: {8: {"allowed_vlan": [300, 301, 302, 303],
-                                }}}}}
+        output = {'local': {"Ethernet": {100: {1: {8: {"allowed_vlan": [300, 301, 302, 303],
+                                }}}}},
+                                'fex': {}}
 
         assert parse_switched_interface(test_data) == output
 
@@ -260,8 +262,9 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {"Ethernet": {100: {1: {8: {"native_vlan": 300,
-                                }}}}}
+        output = {'local': {"Ethernet": {100: {1: {8: {"native_vlan": 300,
+                                }}}}},
+                                'fex': {}}
 
         assert parse_switched_interface(test_data) == output
 
@@ -275,10 +278,11 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {"Ethernet": {100: {1: {8: {"allowed_vlan": [300],
+        output = {'local': {"Ethernet": {100: {1: {8: {"allowed_vlan": [300],
                                              "channel_group": 30,
                                              "lacp": True
-                                }}}}}
+                                }}}}},
+                                'fex': {}}
 
         assert parse_switched_interface(test_data) == output
 
@@ -292,10 +296,11 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {"Ethernet": {100: {1: {8: {"allowed_vlan": [300],
+        output = {'local': {"Ethernet": {100: {1: {8: {"allowed_vlan": [300],
                                              "channel_group": 30,
                                              "lacp": False
-                                }}}}}
+                                }}}}},
+                                'fex': {}}
 
     def test_vpc(self):
         config = ["interface port-channel40",
@@ -308,8 +313,9 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface port-channel\d")
 
-        output = {"port-channel": {40: {"allowed_vlan": [2201, 2203],
-                                        "vpc": 40}}}
+        output = {'local': {"port-channel": {40: {"allowed_vlan": [2201, 2203],
+                                        "vpc": 40}}},
+                                        'fex': {}}
 
         assert parse_switched_interface(test_data) == output
 
@@ -317,13 +323,22 @@ class TestParseSwitchedInt(unittest.TestCase):
     def test_fexfabric(self):
         config = ["interface Ethernet1/4",
                   "  switchport mode fex-fabric",
-                  "  fex-associate 300",
-                  "  channel-group 300"]
+                  "  fex associate 300",
+                  "  channel-group 300",
+                  "",
+                  "interface Ethernet300/1",
+                  "  switchport mode trunk",
+                  "  switchport trunk allowed vlan 300",
+                  "  channel-group 30",
+                  "  no shutdown"]
 
         test_conf = self.CiscoConfParse(config)
-        test_data = test_conf.find_objects(r"^interface port-channel\d")
+        test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {}
+        output = {'local': {'Ethernet': {}}, 
+                  'fex': {300: {1: {'allowed_vlan': [300],
+                                    'channel_group': 30,
+                                    'lacp': False}}}}
 
         assert parse_switched_interface(test_data) == output
 

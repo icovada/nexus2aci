@@ -97,7 +97,7 @@ def parse_switched_interface(interfaces):
             mode = line.re_match(r"switchport mode (.*)$")
             if mode == 'fex-fabric':
                 for line in eth.re_search_children("fex associate"):
-                    fex = line.re_match(r"fex associate (\d*)")
+                    fex = int(line.re_match(r"fex associate (\d*)"))
                     if fex not in fexlist:
                         fexlist.append(fex)
                     
@@ -182,5 +182,12 @@ def parse_switched_interface(interfaces):
             
             intdict[eth_type][eth_path[0]][eth_path[1]].update({eth_path[2]: thisint})
 
+    parsed = {'local': {}, 'fex':{}}
+    for fex in fexlist:
+        parsed['fex'][fex] = intdict['Ethernet'][fex]
+        del intdict['Ethernet'][fex]
+    
+    parsed['local'] = intdict
 
-    return intdict
+
+    return parsed
