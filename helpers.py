@@ -144,6 +144,10 @@ def parse_switched_interface(interfaces):
             thisint.update({"channel_group": int(channel_group),
                             "lacp": lacp})
 
+        if len(eth.re_search_children(r"vpc peer-link")) != 0:
+            # Peer-link, skip this interface
+            continue
+
         for line in eth.re_search_children(r"vpc \d"):
             vpc_id = line.re_match(r"vpc (\d*)$")
             thisint.update({"vpc": int(vpc_id)})
