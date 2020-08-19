@@ -27,9 +27,16 @@ sw2_switched = sw2.find_objects_w_child(r"interface ([A-Za-z\-]*)", "switchport"
 # This will hold information about all the switches in the DC, organised in pairs
 # [{300: {}, 301: {}}, {302: {}, 303:{}}]
 swpair = []
-allint = {}
-allint[300] = parse_switched_interface(sw1_switched)
-allint[301] = parse_switched_interface(sw2_switched)
+allint = {'switch': {}, 'fex': {}}
+sw1_parsed = parse_switched_interface(sw1_switched)
+allint['switch'][300] = sw1_parsed['local']
+allint['fex'].update(sw1_parsed['fex'])
+
+sw2_parsed = parse_switched_interface(sw2_switched)
+allint['switch'][301] = sw2_parsed['local']
+allint['fex'].update(sw2_parsed['fex'])
+
+
 swpair.append(allint)
 
 with open("l3.yml","w") as f:
