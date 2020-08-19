@@ -37,6 +37,19 @@ allint['switch'][301] = sw2_parsed['local']
 allint['fex'].update(sw2_parsed['fex'])
 
 
+# Check config matches on both sides. Raise exception if misaligned
+# Note: disregards descriptions
+for k,v in allint['switch'][300]['port-channel'].items():
+    if 'vpc' in v and 'vpc' in allint['switch'][301]['port-channel'][k]:
+        if v['vpc'] == allint['switch'][301]['port-channel'][k]['vpc']:
+            for k2, v2 in v.items():
+                if k2 != 'description':
+                    try:
+                        assert v2 == allint['switch'][301]['port-channel'][k][k2]
+                    except AssertionError:
+                        print(f"Warning, vpc {v['vpc']} {k2} does not match on both switches")
+
+
 swpair.append(allint)
 
 with open("l3.yml","w") as f:
