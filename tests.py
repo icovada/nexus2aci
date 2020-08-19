@@ -209,9 +209,7 @@ class TestParseSVI(unittest.TestCase):
 
         test_data = self.CiscoConfParse(config)
 
-        output = {1: {"l3": {"vrf": "default",
-                             "shutdown": False},
-                      }}
+        output = {1: {}}
 
         l2dict = parse_vlan_l2(test_data)
         assert parse_svi(test_data, l2dict) == output
