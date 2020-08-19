@@ -15,23 +15,32 @@ def allowed_vlan_to_list(vlanlist):
     return outlist
 
 
-def parse_vlan_l2(conf):
+def parse_vlan_l2(conf, l2dict=None):
+    if l2dict is None:
+        l2dict = {1: {}}
+
     vlans = conf.find_objects(r"^vlan \d{1,4}$")
-    l2dict = {1: {}}
     for vlan in vlans:
         vlan_id = int(vlan.text.split()[-1])
-        l2dict[vlan_id] = {}
+        if vlan_id not in l2dict:
+            l2dict[vlan_id] = {}
+
+        assert isinstance(l2dict[vlan_id], dict)
+
         for line in vlan.re_search_children("name"):
             vlan_name = re.search("name (.*)", line.text)
-            l2dict[vlan_id] = {"name": vlan_name.groups()[0]}
+            l2dict[vlan_id].update({"name": vlan_name.groups()[0]})
 
     return l2dict
 
 
-def parse_svi(conf):
-    l2dict = parse_vlan_l2(conf)
+def parse_svi(conf, svidict):
+    """ 
+    Returns a dictionary with vlan names and l3 info.
+    'svidict' must be output of parse_vlan_l2
+    """
+
     svis = conf.find_objects(r"^interface Vlan")
-    svidict = l2dict
     for svi in svis:
         # Cut away "interface Vlan"
         svi_id = int(svi.re_match(r"interface Vlan(\d{1,4})$"))

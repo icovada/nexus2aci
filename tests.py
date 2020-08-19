@@ -125,7 +125,8 @@ class TestParseSVI(unittest.TestCase):
                       "description": "***VLAN_CED_CAVASSI***",
                       }}
 
-        assert parse_svi(test_data) == output
+        l2dict = parse_vlan_l2(test_data)
+        assert parse_svi(test_data, l2dict) == output
 
     def test_parse_svi_no_hsrp(self):
         config = ["vlan 3",
@@ -148,7 +149,9 @@ class TestParseSVI(unittest.TestCase):
                              "shutdown": False},
                       "description": "SRG-FRONT-END_NEW_SYS-SAT-CMS-W2K",
                       }}
-        assert parse_svi(test_data) == output
+
+        l2dict = parse_vlan_l2(test_data)
+        assert parse_svi(test_data, l2dict) == output
 
     def test_parse_svi_shutdown(self):
         config = ["vlan 3",
@@ -171,7 +174,9 @@ class TestParseSVI(unittest.TestCase):
                              "shutdown": True},
                       "description": "SRG-FRONT-END_NEW_SYS-SAT-CMS-W2K",
                       }}
-        assert parse_svi(test_data) == output
+
+        l2dict = parse_vlan_l2(test_data)
+        assert parse_svi(test_data, l2dict) == output
 
     def test_parse_svi_no_vrf(self):
         config = ["vlan 3",
@@ -193,7 +198,9 @@ class TestParseSVI(unittest.TestCase):
                              "shutdown": False},
                       "description": "SRG-FRONT-END_NEW_SYS-SAT-CMS-W2K",
                       }}
-        assert parse_svi(test_data) == output
+
+        l2dict = parse_vlan_l2(test_data)
+        assert parse_svi(test_data, l2dict) == output
 
     def test_parse_svi_no_ip(self):
         config = ["interface Vlan1",
@@ -205,7 +212,9 @@ class TestParseSVI(unittest.TestCase):
         output = {1: {"vrf": "default",
                       "l3": {"shutdown": False},
                       }}
-        assert parse_svi(test_data) == output
+
+        l2dict = parse_vlan_l2(test_data)
+        assert parse_svi(test_data, l2dict) == output
 
 
 class TestParseSwitchedInt(unittest.TestCase):
