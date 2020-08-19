@@ -111,16 +111,16 @@ class TestParseSVI(unittest.TestCase):
 
         output = {1: {},
                   3: {"name": "FRONT-END",
-                      "vrf": "VRF-VINTAGE",
                       "l3": {"ip_address": "172.26.54.62",
                              "netmask": "255.255.255.192",
+                             "vrf": "VRF-VINTAGE",
                              "shutdown": False},
                       "description": "SRG-FRONT-END_NEW_SYS-SAT-CMS-W2K",
                       },
                   4: {"name": "EX_CED_SDM",
-                      "vrf": "VRF-VINTAGE",
                       "l3": {"ip_address": "172.22.176.9",
                              "netmask": "255.255.252.0",
+                             "vrf": "VRF-VINTAGE",
                              "shutdown": False},
                       "description": "***VLAN_CED_CAVASSI***",
                       }}
@@ -143,9 +143,9 @@ class TestParseSVI(unittest.TestCase):
 
         output = {1: {},
                   3: {"name": "FRONT-END",
-                      "vrf": "VRF-VINTAGE",
                       "l3": {"ip_address": "172.26.54.41",
                              "netmask": "255.255.255.192",
+                             "vrf": "VRF-VINTAGE",
                              "shutdown": False},
                       "description": "SRG-FRONT-END_NEW_SYS-SAT-CMS-W2K",
                       }}
@@ -168,9 +168,9 @@ class TestParseSVI(unittest.TestCase):
 
         output = {1: {},
                   3: {"name": "FRONT-END",
-                      "vrf": "VRF-VINTAGE",
                       "l3": {"ip_address": "172.26.54.41",
                              "netmask": "255.255.255.192",
+                             "vrf": "VRF-VINTAGE",
                              "shutdown": True},
                       "description": "SRG-FRONT-END_NEW_SYS-SAT-CMS-W2K",
                       }}
@@ -192,9 +192,9 @@ class TestParseSVI(unittest.TestCase):
 
         output = {1: {},
                   3: {"name": "FRONT-END",
-                      "vrf": "default",
                       "l3": {"ip_address": "172.26.54.41",
                              "netmask": "255.255.255.192",
+                             "vrf": "default",
                              "shutdown": False},
                       "description": "SRG-FRONT-END_NEW_SYS-SAT-CMS-W2K",
                       }}
@@ -209,8 +209,8 @@ class TestParseSVI(unittest.TestCase):
 
         test_data = self.CiscoConfParse(config)
 
-        output = {1: {"vrf": "default",
-                      "l3": {"shutdown": False},
+        output = {1: {"l3": {"vrf": "default",
+                             "shutdown": False},
                       }}
 
         l2dict = parse_vlan_l2(test_data)

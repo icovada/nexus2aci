@@ -48,18 +48,18 @@ def parse_svi(conf, svidict):
         if svi_id not in svidict:
             svidict[svi_id] = {}
 
-        svidict[svi_id]["vrf"] = "default"
+        svidict[svi_id]["l3"] = {}
+        svidict[svi_id]["l3"]["vrf"] = "default"
         for vrf in svi.re_search_children("vrf member"):
             vrf_name = vrf.re_match("vrf member (.*)")
-            svidict[svi_id].update({"vrf": vrf_name})
+            svidict[svi_id]["l3"].update({"vrf": vrf_name})
 
-        svidict[svi_id]["l3"] = {}
         for vrf in svi.re_search_children("ip address"):
             ip_text = vrf.re_match(r"ip address (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2})")
             address = ipaddress.ip_interface(ip_text)
             ip = str(address.ip)
             netmask = str(address.netmask)
-            svidict[svi_id].update({"l3": {"ip_address": ip, "netmask": netmask}})
+            svidict[svi_id]["l3"].update({"ip_address": ip, "netmask": netmask})
 
         for hsrp in svi.re_search_children(r"hsrp \d"):
             for address in hsrp.re_search_children("ip"):
