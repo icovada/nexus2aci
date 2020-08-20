@@ -4,6 +4,7 @@ from helpers import parse_svi, parse_vlan_l2
 import pandas as pd
 
 
+# Define how to transform data from nexus into ACI object names
 def epg(rowdict):
     if 'description' in rowdict:
         return rowdict['Vlan name'] + "-GDC_EPG"
