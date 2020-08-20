@@ -21,8 +21,10 @@ agg_l3 = parse_svi(aggregation, sw1_l3)
 
 
 # Filter all switched interfaces from access switches
-sw1_switched = sw1.find_objects_w_child(r"interface ([A-Za-z\-]*)", "switchport")
-sw2_switched = sw2.find_objects_w_child(r"interface ([A-Za-z\-]*)", "switchport")
+sw1_switched = sw1.find_objects_w_child(
+    r"interface ([A-Za-z\-]*)", "switchport")
+sw2_switched = sw2.find_objects_w_child(
+    r"interface ([A-Za-z\-]*)", "switchport")
 
 # This will hold information about all the switches in the DC, organised in pairs
 # [{300: {}, 301: {}}, {302: {}, 303:{}}]
@@ -39,7 +41,7 @@ allint['fex'].update(sw2_parsed['fex'])
 
 # Check config matches on both sides. Raise exception if misaligned
 # Note: disregards descriptions
-for k,v in allint['switch'][300]['port-channel'].items():
+for k, v in allint['switch'][300]['port-channel'].items():
     if 'vpc' in v and 'vpc' in allint['switch'][301]['port-channel'][k]:
         if v['vpc'] == allint['switch'][301]['port-channel'][k]['vpc']:
             for k2, v2 in v.items():
@@ -47,12 +49,13 @@ for k,v in allint['switch'][300]['port-channel'].items():
                     try:
                         assert v2 == allint['switch'][301]['port-channel'][k][k2]
                     except AssertionError:
-                        print(f"Warning, vpc {v['vpc']} {k2} does not match on both switches")
+                        print(
+                            f"Warning, vpc {v['vpc']} {k2} does not match on both switches")
 
 
 swpair.append(allint)
 
-with open("l3.yml","w") as f:
+with open("l3.yml", "w") as f:
     f.write(yaml.dump(agg_l3))
 
 with open("out.yml", "w") as f:

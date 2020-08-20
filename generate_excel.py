@@ -3,9 +3,11 @@ import yaml
 from helpers import parse_svi, parse_vlan_l2
 import pandas as pd
 
+
 def epg(rowdict):
     if 'description' in rowdict:
         return rowdict['Vlan name'] + "-GDC_EPG"
+
 
 def anp(rowdict):
     if 'vrf' in rowdict:
@@ -13,9 +15,11 @@ def anp(rowdict):
         step2 = step1 + "-GDC_ANP"
         return step2
 
+
 def bd(rowdict):
     if 'description' in rowdict:
         return row['Vlan name'] + "-GDC_BD"
+
 
 def vrf(rowdict):
     if 'vrf' in rowdict:
@@ -23,8 +27,10 @@ def vrf(rowdict):
         step2 = step1 + "-GDC_VRF"
         return step2
 
+
 def tenant(rowdict):
     pass
+
 
 # parse configs for access and distribution switches
 # you should theoretically add all switches in the DC
@@ -47,9 +53,12 @@ excelout = []
 for k, v in agg_l3.items():
     row = {}
     row['Vlan ID'] = k
-    if 'name' in v: row['Vlan name'] = v['name']
-    if 'l3' in v: row.update(v['l3'])
-    if 'description' in v: row['description'] = v['description']
+    if 'name' in v:
+        row['Vlan name'] = v['name']
+    if 'l3' in v:
+        row.update(v['l3'])
+    if 'description' in v:
+        row['description'] = v['description']
 
     row['EPG'] = epg(row)
     row['ANP'] = anp(row)
@@ -71,6 +80,6 @@ dfexcel = pd.DataFrame(excelout, columns=["Vlan ID",
                                           "BD",
                                           "VRF-NEW",
                                           "Tenant"
-                                         ])
+                                          ])
 
 dfexcel.to_excel('excelout.xlsx')

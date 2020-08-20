@@ -39,7 +39,7 @@ for tenant in tenant_list:
         appdict = {'name': app,
                    'epg': allepg}
         allapp.append(appdict)
-    
+
     tenantdict = {'name': tenant,
                   'app': allapp,
                   'bd': thistenant['BD'].unique().tolist(),

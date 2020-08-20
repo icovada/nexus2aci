@@ -5,8 +5,9 @@ def traverse_dict(dict, path):
     else:
         return traverse_dict(dict, path[1:])
 
+
 def find_key(d, value):
-    for k,v in d.items():
+    for k, v in d.items():
         if isinstance(v, dict):
             p = find_key(v, value)
             if p:
