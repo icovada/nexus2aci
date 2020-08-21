@@ -83,4 +83,5 @@ dfexcel = pd.DataFrame(excelout, columns=["Vlan ID",
                                           "Tenant"
                                           ])
 
+dfexcel.sort_values(by=['Vlan ID'], inplace=True)
 dfexcel.to_excel('excelout.xlsx')
