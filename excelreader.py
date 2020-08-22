@@ -65,6 +65,17 @@ for tenant in clean_tenant_list:
                 bddict = deepcopy(default_bd)
                 bddict.update({'name': bd,
                                'vrf': vrf})
+
+                if isinstance(thisrow['netmask'], str):
+                    netmask = thisrow['netmask']
+                    # Black magic from https://stackoverflow.com/questions/38085571/how-use-netaddr-to-convert-subnet-mask-to-cidr-in-python
+                    # Does not validate wrong stuff like 8.128.240.252
+                    cidr = sum(bin(int(x)).count('1') for x in netmask.split('.'))
+                    l3 = {'name': thisrow['ip_address'],
+                          'mask': cidr,
+                          'scope': 'public'}
+
+                bddict['subnet'].append(l3)
                 all_tenant_bd.append(bddict)
 
             epgdict = deepcopy(default_epg)
