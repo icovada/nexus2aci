@@ -67,10 +67,16 @@ for tenant in clean_tenant_list:
                                'vrf': vrf})
 
                 if isinstance(thisrow['netmask'], str):
-                    netmask = thisrow['netmask']
+                    netmask = thisrow['netmask'].split('.')
+                    # Validate subnet mask
+                    for i in range(len(netmask)-1):
+                        try:
+                            assert netmask[i] >= netmask[i+1]
+                        except AssertionError:
+                            raise AssertionError(f"Invalid subnet format {thisrow['netmask']}")
+
                     # Black magic from https://stackoverflow.com/questions/38085571/how-use-netaddr-to-convert-subnet-mask-to-cidr-in-python
-                    # Does not validate wrong stuff like 8.128.240.252
-                    cidr = sum(bin(int(x)).count('1') for x in netmask.split('.'))
+                    cidr = sum(bin(int(x)).count('1') for x in netmask)
                     l3 = {'name': thisrow['ip_address'],
                           'mask': cidr,
                           'scope': 'public'}
