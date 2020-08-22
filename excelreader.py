@@ -95,7 +95,7 @@ for tenant in clean_tenant_list:
         allapp.append(appdict)
 
     vrf_list = thistenant['VRF-NEW'].unique().tolist()
-    clean_vrf_list = [x for x in vrf_list if str(x) != 'nan']
+    clean_vrf_list = [{'name': x} for x in vrf_list if str(x) != 'nan']
 
     tenantdict = deepcopy(default_tenant)
     tenantdict.update({'name': tenant,
