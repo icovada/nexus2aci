@@ -1,9 +1,9 @@
 def traverse_dict(dict, path):
     """gets a value in nested dictionaries across path"""
-    if len(path) == 0:
-        return dict
+    if len(path) == 1:
+        return dict[path[0]]
     else:
-        return traverse_dict(dict, path[1:])
+        return traverse_dict(dict[path[0]], path[1:])
 
 
 def find_key(d, value):
