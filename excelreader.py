@@ -2,6 +2,30 @@ import pandas as pd
 import numpy as np
 import yaml
 import math
+from copy import deepcopy
+
+
+default_tenant = {'name': '',
+                  'description': '',
+                  'app': [],
+                  'bd': [],
+                  'vrf': [],
+                  'contract': [],
+                  'protocol_policy': {}}
+
+default_app = {'name': '',
+               'epg': []}
+
+default_epg = {'name': '',
+               'bd': '',
+               'contract': [],
+               'static_path': [],
+               'domain': []}
+
+default_bd = {'name': '',
+              'subnet': [],
+              'vrf': ''}
+
 
 excel = pd.read_excel("excelout.xlsx")
 
@@ -35,15 +59,18 @@ for tenant in clean_tenant_list:
                 thisbd = thisepg.loc[thisepg['BD'] == bd]
                 thisrow = thisbd.iloc[0]
                 vrf = thisrow['VRF-NEW']
-                bddict = {'name': bd,
-                          'vrf': vrf}
+                bddict = deepcopy(default_bd)
+                bddict.update({'name': bd,
+                               'vrf': vrf})
 
-            epgdict = {'name': epg,
-                       'bd': bddict}
+            epgdict = deepcopy(default_epg)
+            epgdict.update({'name': epg,
+                            'bd': bddict})
             allepg.append(epgdict)
 
-        appdict = {'name': app,
-                   'epg': allepg}
+        appdict = deepcopy(default_app)
+        appdict.update({'name': app,
+                        'epg': allepg})
         allapp.append(appdict)
 
     bd_list = thistenant['BD'].unique().tolist()
@@ -52,13 +79,14 @@ for tenant in clean_tenant_list:
     vrf_list = thistenant['VRF-NEW'].unique().tolist()
     clean_vrf_list = [x for x in vrf_list if str(x) != 'nan']
 
-    tenantdict = {'name': tenant,
-                  'app': allapp,
-                  'bd': clean_bd_list,
-                  'vrf': clean_vrf_list}
+    tenantdict = deepcopy(default_tenant)
+    tenantdict.update({'name': tenant,
+                       'app': allapp,
+                       'bd': clean_bd_list,
+                       'vrf': clean_vrf_list})
     alltenant.append(tenantdict)
 
 fabric = {'tenant': alltenant}
 
 with open('fabric-cfg.yml', 'w') as f:
-    f.write(yaml.dump(fabric, default_flow_style=False))
+    f.write(yaml.dump(fabric))
