@@ -55,17 +55,11 @@ for tenant in clean_tenant_list:
             bd_list = thisepg.BD.unique().tolist()
             clean_bd_list = [x for x in bd_list if str(x) != 'nan']
 
-            for bd in clean_bd_list:
-                thisbd = thisepg.loc[thisepg['BD'] == bd]
-                thisrow = thisbd.iloc[0]
-                vrf = thisrow['VRF-NEW']
-                bddict = deepcopy(default_bd)
-                bddict.update({'name': bd,
-                               'vrf': vrf})
+            assert len(clean_bd_list) == 1
 
             epgdict = deepcopy(default_epg)
             epgdict.update({'name': epg,
-                            'bd': bddict})
+                            'bd': clean_bd_list[0]})
             allepg.append(epgdict)
 
         appdict = deepcopy(default_app)
