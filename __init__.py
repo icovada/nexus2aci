@@ -30,11 +30,11 @@ sw2_switched = sw2.find_objects_w_child(
 # [{300: {}, 301: {}}, {302: {}, 303:{}}]
 swpair = []
 allint = {'switch': {}, 'fex': {}}
-sw1_parsed = parse_switched_interface(sw1_switched)
+sw1_parsed = parse_switched_interface(sw1_switched, l2dict)
 allint['switch'][300] = sw1_parsed['local']
 allint['fex'].update(sw1_parsed['fex'])
 
-sw2_parsed = parse_switched_interface(sw2_switched)
+sw2_parsed = parse_switched_interface(sw2_switched, l2dict)
 allint['switch'][301] = sw2_parsed['local']
 allint['fex'].update(sw2_parsed['fex'])
 
@@ -55,8 +55,8 @@ for k, v in allint['switch'][300]['port-channel'].items():
 
 swpair.append(allint)
 
-with open("l3.yml", "w") as f:
-    f.write(yaml.dump(agg_l3))
+out = {'fabric': swpair,
+       'network': agg_l3}
 
 with open("out.yml", "w") as f:
-    f.write(yaml.dump(swpair))
+    f.write(yaml.dump(out))

@@ -2,7 +2,9 @@ import re
 import ipaddress
 
 
-def allowed_vlan_to_list(vlanlist):
+def allowed_vlan_to_list(vlanlist, l2dict=None):
+    # Expands vlan ranges and checks if the vlan is in l2dict
+    # l2dict is the result of parse_vlan_l2
     split = vlanlist.split(",")
     outlist = []
     for vlan in split:
@@ -12,6 +14,10 @@ def allowed_vlan_to_list(vlanlist):
             outlist = outlist + newvlans
         else:
             outlist.append(int(vlan))
+    
+    if l2dict is not None:
+        outlist = [x for x in outlist if x in l2dict]
+
     return outlist
 
 
@@ -81,7 +87,9 @@ def parse_svi(conf, svidict):
 
     return svidict
 
-def parse_switched_interface(interfaces):
+def parse_switched_interface(interfaces, l2dict=None):
+    # Parse switched interface and expand vlan list
+    # l2dict is passed through to allowed_vlan_to_list
     intdict = {}
     fexlist = []
     for eth in interfaces:
@@ -121,7 +129,7 @@ def parse_switched_interface(interfaces):
         for line in eth.re_search_children("switchport trunk allowed vlan"):
             allowed_vlan = line.re_match(
                 r"switchport trunk allowed vlan (.*)$")
-            allowed_vlan_list = allowed_vlan_to_list(allowed_vlan)
+            allowed_vlan_list = allowed_vlan_to_list(allowed_vlan, l2dict)
 
             if "native_vlan" in locals():
                 try:
