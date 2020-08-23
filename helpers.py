@@ -14,7 +14,7 @@ def allowed_vlan_to_list(vlanlist, l2dict=None):
             outlist = outlist + newvlans
         else:
             outlist.append(int(vlan))
-    
+
     if l2dict is not None:
         outlist = [x for x in outlist if x in l2dict]
 
@@ -87,11 +87,16 @@ def parse_svi(conf, svidict):
 
     return svidict
 
-def parse_switched_interface(interfaces, l2dict=None):
+
+def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
     # Parse switched interface and expand vlan list
     # l2dict is passed through to allowed_vlan_to_list
     intdict = {}
-    fexlist = []
+    port_channels = {}
+    thisswitch = {'port-channel': {}}
+    if fabric is None:
+        fabric = {}
+
     for eth in interfaces:
         # Split interface name in various pieces
         eth_type = eth.re_match(r"interface ([A-Za-z\-]*)(\/*\d*)+")
@@ -99,27 +104,51 @@ def parse_switched_interface(interfaces, l2dict=None):
         eth_path = [int(x) for x in eth_id.split("/")]
 
         thisint = {}
-
+        # find description
         for line in eth.re_search_children("description"):
             description = line.re_match(r"description (.*)$")
             thisint.update({"description": description})
 
+        # ignore ports connected to a fex
         is_fex = False
         for line in eth.re_search_children("switchport mode"):
             mode = line.re_match(r"switchport mode (.*)$")
             if mode == 'fex-fabric':
-                for line in eth.re_search_children("fex associate"):
-                    fex = int(line.re_match(r"fex associate (\d*)"))
-                    if fex not in fexlist:
-                        fexlist.append(fex)
-                    
-                    is_fex = True
+                is_fex = True
 
         if is_fex:
             continue
 
+        # Add interface membership to channel-group
+        peer_link = False
+        for line in eth.re_search_children("channel-group"):
+            channel_group_id = int(line.re_match(r"channel-group (\d*)"))
+            mode = line.re_match(r"mode (\w*)")
+            if mode == 'active':
+                lacp = True
+            elif mode == '':
+                lacp = False
+            else:
+                raise ValueError("What is PaGP still doing in prod")
+
+            # Peer-link, skip this interface
+            if len(eth.re_search_children(r"vpc peer-link")) != 0:
+                peer_link = True
+            
+            if peer_link is False:
+                if channel_group_id not in port_channels:
+                    port_channels[channel_group_id] = {'members': []}
+
+                port_channels[channel_group_id].update({'lacp': lacp})
+                port_channels[channel_group_id]['members'].append(
+                    eth_path)
+
+        if peer_link:
+            continue
+
         for line in eth.re_search_children("switchport trunk native vlan"):
-            native_vlan = int(line.re_match(r"switchport trunk native vlan (.*)$"))
+            native_vlan = int(line.re_match(
+                r"switchport trunk native vlan (.*)$"))
             thisint.update({"native_vlan": native_vlan})
 
         for line in eth.re_search_children("switchport access vlan"):
@@ -144,22 +173,6 @@ def parse_switched_interface(interfaces, l2dict=None):
             if mode == "access":
                 thisint["native_vlan"] = 1
 
-        for line in eth.re_search_children("channel-group"):
-            channel_group = line.re_match(r"channel-group (\d*)")
-            mode = line.re_match(r"mode (\w*)")
-            if mode == 'active':
-                lacp = True
-            elif mode == '':
-                lacp = False
-            else:
-                raise ValueError("What is PaGP still doing in prod")
-            thisint.update({"channel_group": int(channel_group),
-                            "lacp": lacp})
-
-        if len(eth.re_search_children(r"vpc peer-link")) != 0:
-            # Peer-link, skip this interface
-            continue
-
         for line in eth.re_search_children(r"vpc \d"):
             vpc_id = line.re_match(r"vpc (\d*)$")
             thisint.update({"vpc": int(vpc_id)})
@@ -171,11 +184,11 @@ def parse_switched_interface(interfaces, l2dict=None):
 
         if len(eth_path) == 1:
             try:
-                assert isinstance(intdict[eth_type], dict)
+                assert isinstance(intdict[eth_type][eth_path[0]], dict)
             except (AssertionError, KeyError):
-                intdict[eth_type] = {}
+                intdict[eth_type][eth_path[0]] = {}
 
-            intdict[eth_type].update({eth_path[0]: thisint})
+            intdict[eth_type][eth_path[0]].update(thisint)
 
         if len(eth_path) == 2:
             try:
@@ -183,7 +196,12 @@ def parse_switched_interface(interfaces, l2dict=None):
             except (AssertionError, KeyError):
                 intdict[eth_type][eth_path[0]] = {}
             
-            intdict[eth_type][eth_path[0]].update({eth_path[1]: thisint})
+            try:
+                assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]], dict)
+            except (AssertionError, KeyError):
+                intdict[eth_type][eth_path[0]][eth_path[1]] = {}
+
+            intdict[eth_type][eth_path[0]][eth_path[1]].update(thisint)
 
         if len(eth_path) == 3:
             try:
@@ -195,15 +213,44 @@ def parse_switched_interface(interfaces, l2dict=None):
                 assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]], dict)
             except (AssertionError, KeyError):
                 intdict[eth_type][eth_path[0]][eth_path[1]] = {}
+
+            try:
+                assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]], dict)
+            except (AssertionError, KeyError):
+                intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]] = {}
+
+            intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]].update(thisint)
+
+        if len(eth_path) == 4:
+            try:
+                assert isinstance(intdict[eth_type][eth_path[0]], dict)
+            except (AssertionError, KeyError):
+                intdict[eth_type][eth_path[0]] = {}
             
-            intdict[eth_type][eth_path[0]][eth_path[1]].update({eth_path[2]: thisint})
+            try:
+                assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]], dict)
+            except (AssertionError, KeyError):
+                intdict[eth_type][eth_path[0]][eth_path[1]] = {}
 
-    parsed = {'local': {}, 'fex':{}}
-    for fex in fexlist:
-        parsed['fex'][fex] = intdict['Ethernet'][fex]
-        del intdict['Ethernet'][fex]
-    
-    parsed['local'] = intdict
+            try:
+                assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]], dict)
+            except (AssertionError, KeyError):
+                intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]] = {}
+
+            try:
+                assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]][eth_path[3]], dict)
+            except (AssertionError, KeyError):
+                intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]][eth_path[3]] = {}
+
+            intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]][eth_path[3]].update(thisint)
 
 
-    return parsed
+    fabric[swid] = thisswitch
+    fabric[swid].update(intdict)
+
+    for k, v in port_channels.items():
+        if k not in fabric[swid]['port-channel']:
+            continue
+        fabric[swid]['port-channel'][k].update(v)
+
+    return fabric
