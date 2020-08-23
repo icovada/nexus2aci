@@ -228,12 +228,12 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {'local': {"Ethernet": {100: {1: {8: {"description": "SNSV01021_nic0_3",
-                                                       "native_vlan": 300
-                                                       }}}}},
-                  'fex': {}}
+        output = {1: {"port-channel": {},
+                      "Ethernet": {100: {1: {8: {"description": "SNSV01021_nic0_3",
+                                                 "native_vlan": 300
+                                                 }}}}}}
 
-        assert parse_switched_interface(test_data) == output
+        assert parse_switched_interface(test_data, 1) == output
 
     def test_trunk_port(self):
         config = ["interface Ethernet100/1/8",
@@ -244,11 +244,11 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {'local': {"Ethernet": {100: {1: {8: {"allowed_vlan": [300, 301, 302, 303],
-                                                       }}}}},
-                  'fex': {}}
+        output = {1: {"port-channel": {},
+                      "Ethernet": {100: {1: {8: {"allowed_vlan": [300, 301, 302, 303],
+                                                       }}}}}}
 
-        assert parse_switched_interface(test_data) == output
+        assert parse_switched_interface(test_data, 1) == output
 
     def test_trunk_port_1_vlan(self):
         config = ["interface Ethernet100/1/8",
@@ -260,11 +260,12 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {'local': {"Ethernet": {100: {1: {8: {"native_vlan": 300,
-                                                       }}}}},
-                  'fex': {}}
 
-        assert parse_switched_interface(test_data) == output
+        output = {1: {"port-channel": {},
+                      "Ethernet": {100: {1: {8: {"native_vlan": 300,
+                                                       }}}}}}
+
+        assert parse_switched_interface(test_data, 1) == output
 
     def test_portchannel_lacp(self):
         config = ["interface Ethernet100/1/8",
@@ -282,7 +283,7 @@ class TestParseSwitchedInt(unittest.TestCase):
                                                        }}}}},
                   'fex': {}}
 
-        assert parse_switched_interface(test_data) == output
+        assert parse_switched_interface(test_data, 1) == output
 
     def test_portchannel(self):
         config = ["interface Ethernet100/1/8",
@@ -332,12 +333,9 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {'local': {'Ethernet': {}},
-                  'fex': {300: {1: {'allowed_vlan': [300],
-                                    'channel_group': 30,
-                                    'lacp': False}}}}
+        output = {1: {'port-channel': {}, 'Ethernet': {300: {1: {'allowed_vlan': [300]}}}}}
 
-        assert parse_switched_interface(test_data) == output
+        assert parse_switched_interface(test_data, 1) == output
 
 
 if __name__ == '__main__':
