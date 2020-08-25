@@ -267,39 +267,26 @@ class TestParseSwitchedInt(unittest.TestCase):
 
         assert parse_switched_interface(test_data, 1) == output
 
-    def test_portchannel_lacp(self):
-        config = ["interface Ethernet100/1/8",
-                  "  switchport mode trunk",
-                  "  switchport trunk allowed vlan 300",
-                  "  channel-group 30 mode active",
-                  "  no shutdown"]
-
-        test_conf = self.CiscoConfParse(config)
-        test_data = test_conf.find_objects(r"^interface Ethernet\d")
-
-        output = {'local': {"Ethernet": {100: {1: {8: {"allowed_vlan": [300],
-                                                       "channel_group": 30,
-                                                       "lacp": True
-                                                       }}}}},
-                  'fex': {}}
-
-        assert parse_switched_interface(test_data, 1) == output
-
     def test_portchannel(self):
         config = ["interface Ethernet100/1/8",
                   "  switchport mode trunk",
                   "  switchport trunk allowed vlan 300",
-                  "  channel-group 30",
-                  "  no shutdown"]
+                  "  channel-group 30 mode active",
+                  "  no shutdown",
+                  "",
+                  "interface port-channel30",
+                  "  switchport mode trunk",
+                  "  switchport trunk allowed vlan 300"]
 
         test_conf = self.CiscoConfParse(config)
-        test_data = test_conf.find_objects(r"^interface Ethernet\d")
+        test_data = test_conf.find_objects(r"^interface")
 
-        output = {'local': {"Ethernet": {100: {1: {8: {"allowed_vlan": [300],
-                                                       "channel_group": 30,
-                                                       "lacp": False
-                                                       }}}}},
-                  'fex': {}}
+        output = {1: {'port-channel': {30: {'allowed_vlan': [300], 
+                                            'members': [[100, 1, 8]], 
+                                            'lacp': True}},
+                      'Ethernet': {100: {1: {8: {'allowed_vlan': [300]}}}}}}
+
+        assert parse_switched_interface(test_data, 1) == output
 
     def test_vpc(self):
         config = ["interface port-channel40",
