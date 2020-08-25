@@ -88,6 +88,22 @@ def parse_svi(conf, svidict):
     return svidict
 
 
+def update_dict_in_path(dic, path, value):
+    try:
+        isinstance(dic[path[0]], dict)
+    except:
+        dic[path[0]] = {}
+    
+    if len(path) == 1:
+        dic[path[0]].update(value)
+        return dic
+
+    else:
+        inner = update_dict_in_path(dic[path[0]], path[1:], value)
+        #dic[path[0]].update(inner)
+        return dic
+
+
 def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
     # Parse switched interface and expand vlan list
     # l2dict is passed through to allowed_vlan_to_list
@@ -177,72 +193,7 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
             vpc_id = line.re_match(r"vpc (\d*)$")
             thisint.update({"vpc": int(vpc_id)})
 
-        try:
-            assert isinstance(intdict[eth_type], dict)
-        except (AssertionError, KeyError):
-            intdict[eth_type] = {}
-
-        if len(eth_path) == 1:
-            try:
-                assert isinstance(intdict[eth_type][eth_path[0]], dict)
-            except (AssertionError, KeyError):
-                intdict[eth_type][eth_path[0]] = {}
-
-            intdict[eth_type][eth_path[0]].update(thisint)
-
-        if len(eth_path) == 2:
-            try:
-                assert isinstance(intdict[eth_type][eth_path[0]], dict)
-            except (AssertionError, KeyError):
-                intdict[eth_type][eth_path[0]] = {}
-            
-            try:
-                assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]], dict)
-            except (AssertionError, KeyError):
-                intdict[eth_type][eth_path[0]][eth_path[1]] = {}
-
-            intdict[eth_type][eth_path[0]][eth_path[1]].update(thisint)
-
-        if len(eth_path) == 3:
-            try:
-                assert isinstance(intdict[eth_type][eth_path[0]], dict)
-            except (AssertionError, KeyError):
-                intdict[eth_type][eth_path[0]] = {}
-            
-            try:
-                assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]], dict)
-            except (AssertionError, KeyError):
-                intdict[eth_type][eth_path[0]][eth_path[1]] = {}
-
-            try:
-                assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]], dict)
-            except (AssertionError, KeyError):
-                intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]] = {}
-
-            intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]].update(thisint)
-
-        if len(eth_path) == 4:
-            try:
-                assert isinstance(intdict[eth_type][eth_path[0]], dict)
-            except (AssertionError, KeyError):
-                intdict[eth_type][eth_path[0]] = {}
-            
-            try:
-                assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]], dict)
-            except (AssertionError, KeyError):
-                intdict[eth_type][eth_path[0]][eth_path[1]] = {}
-
-            try:
-                assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]], dict)
-            except (AssertionError, KeyError):
-                intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]] = {}
-
-            try:
-                assert isinstance(intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]][eth_path[3]], dict)
-            except (AssertionError, KeyError):
-                intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]][eth_path[3]] = {}
-
-            intdict[eth_type][eth_path[0]][eth_path[1]][eth_path[2]][eth_path[3]].update(thisint)
+        intdict = update_dict_in_path(intdict, [eth_type] + eth_path, thisint)
 
 
     fabric[swid] = thisswitch
