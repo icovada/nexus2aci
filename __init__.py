@@ -21,36 +21,32 @@ agg_l3 = parse_svi(aggregation, sw1_l3)
 
 
 # Filter all switched interfaces from access switches
-sw1_switched = sw1.find_objects_w_child(
-    r"interface ([A-Za-z\-]*)", "switchport")
-sw2_switched = sw2.find_objects_w_child(
-    r"interface ([A-Za-z\-]*)", "switchport")
+sw1_switched = sw1.find_objects(r"interface (port-channel|Ethernet).*")
+sw2_switched = sw2.find_objects(r"interface (port-channel|Ethernet).*")
 
 # This will hold information about all the switches in the DC, organised in pairs
 # [{300: {}, 301: {}}, {302: {}, 303:{}}]
 swpair = []
 allint = {'switch': {}, 'fex': {}}
-sw1_parsed = parse_switched_interface(sw1_switched, l2dict)
-allint['switch'][300] = sw1_parsed['local']
-allint['fex'].update(sw1_parsed['fex'])
+sw1_parsed = parse_switched_interface(sw1_switched, 1, l2dict)
 
-sw2_parsed = parse_switched_interface(sw2_switched, l2dict)
-allint['switch'][301] = sw2_parsed['local']
-allint['fex'].update(sw2_parsed['fex'])
+sw2_parsed = parse_switched_interface(sw2_switched, 2, l2dict, sw1_parsed)
+
+a = sw2_parsed[1]["Ethernet"][1]
+
 
 
 # Check config matches on both sides. Raise exception if misaligned
-# Note: disregards descriptions
-for k, v in allint['switch'][300]['port-channel'].items():
-    if 'vpc' in v and 'vpc' in allint['switch'][301]['port-channel'][k]:
-        if v['vpc'] == allint['switch'][301]['port-channel'][k]['vpc']:
+# Note: disregards descriptions and members
+for k, v in sw2_parsed[1]['port-channel'].items():
+    if 'vpc' in v and 'vpc' in sw2_parsed[2]['port-channel'][k]:
+        if v['vpc'] == sw2_parsed[2]['port-channel'][k]['vpc']:
             for k2, v2 in v.items():
-                if k2 != 'description':
+                if not k2.endswith(('description', 'members')):
                     try:
-                        assert v2 == allint['switch'][301]['port-channel'][k][k2]
+                        assert v2 == sw2_parsed[2]['port-channel'][k][k2]
                     except AssertionError:
-                        print(
-                            f"Warning, vpc {v['vpc']} {k2} does not match on both switches")
+                        print(f"Warning, vpc {v['vpc']} {k2} does not match on both switches")
 
 
 swpair.append(allint)
