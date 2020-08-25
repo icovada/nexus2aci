@@ -222,3 +222,49 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
         fabric[swid]['port-channel'][k].update(v)
 
     return fabric
+
+
+def match_vpc(row_config):
+    # Takes in input of parse_switched_interface
+    # Peers vpc configs in one single line
+
+    vpc = {}
+    for k, v in row_config.items():
+        po_w_vpc = []
+        for pok, pov in v['port-channel'].items():
+            if 'vpc' in pov:
+                vpc_id = pov['vpc']
+                po_w_vpc.append(vpc_id)
+                if pov['vpc'] not in vpc:
+                    vpc[vpc_id] = {}
+                
+                if 'description' in pov:
+                    vpc[vpc_id].update({'description': pov['description']})
+
+                if 'lacp' in pov:
+                    vpc[vpc_id].update({'lacp': pov['lacp']})
+
+                if 'native_vlan' in pov:
+                    vpc[vpc_id].update({'native_vlan': pov['native_vlan']})
+                        
+                if 'allowed_vlan' in pov:
+                    vpc[vpc_id].update({'allowed_vlan': pov['allowed_vlan']})
+
+                if 'members' in pov:
+                    # Add switch ID to interface name
+                    members = [[k] + x for x in pov['members']]
+                    if 'members' in vpc[vpc_id]:
+                        vpc[vpc_id]['members'] = vpc[vpc_id]['members'] + members
+                    else:
+                        vpc[vpc_id].update({'members': members})
+
+        
+        #Delete port channel with vpc
+        for i in po_w_vpc:
+            del(v['port-channel'][i])
+
+    row_config.update({'vpc': vpc})
+
+    return row_config
+                        
+                           

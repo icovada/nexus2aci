@@ -30,21 +30,23 @@ swpair = []
 sw1_parsed = parse_switched_interface(sw1_switched, 1, l2dict)
 sw2_parsed = parse_switched_interface(sw2_switched, 2, l2dict, sw1_parsed)
 
-a = sw2_parsed[1]["Ethernet"][1]
+
+cage_config = match_vpc(sw2_parsed)
 
 
 
-# Check config matches on both sides. Raise exception if misaligned
-# Note: disregards descriptions and members
-for k, v in sw2_parsed[1]['port-channel'].items():
-    if 'vpc' in v and 'vpc' in sw2_parsed[2]['port-channel'][k]:
-        if v['vpc'] == sw2_parsed[2]['port-channel'][k]['vpc']:
-            for k2, v2 in v.items():
-                if not k2.endswith(('description', 'members')):
-                    try:
-                        assert v2 == sw2_parsed[2]['port-channel'][k][k2]
-                    except AssertionError:
-                        print(f"Warning, vpc {v['vpc']} {k2} does not match on both switches")
+
+# # Check config matches on both sides. Raise exception if misaligned
+# # Note: disregards descriptions and members
+# for k, v in cage_config[1]['port-channel'].items():
+#     if 'vpc' in v and 'vpc' in cage_config[2]['port-channel'][k]:
+#         if v['vpc'] == cage_config[2]['port-channel'][k]['vpc']:
+#             for k2, v2 in v.items():
+#                 if not k2.endswith(('description', 'members')):
+#                     try:
+#                         assert v2 == cage_config[2]['port-channel'][k][k2]
+#                     except AssertionError:
+#                         print(f"Warning, vpc {v['vpc']} {k2} does not match on both switches")
 
 
 swpair.append(sw2_parsed)
@@ -53,4 +55,4 @@ out = {'fabric': swpair,
        'network': agg_l3}
 
 with open("out.yml", "w") as f:
-    f.write(yaml.dump(out))
+    f.write(yaml.dump(cage_config))
