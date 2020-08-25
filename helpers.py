@@ -132,6 +132,7 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
         eth_type = eth.re_match(r"interface ([A-Za-z\-]*)(\/*\d*)+")
         eth_id = eth.re_match(r"interface [A-Za-z\-]*((\/*\d*)+)")
         eth_path = [int(x) for x in eth_id.split("/")]
+        eth_path = transform_port_numbers(intdict, [eth_type] + eth_path)
 
         thisint = {}
         # find description
@@ -147,7 +148,6 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
                 is_fex = True
 
         if is_fex:
-            eth_path = transform_port_numbers(intdict, [eth_type] + eth_path)
             intdict = update_dict_in_path(intdict, eth_path, {})
             continue
 
@@ -176,7 +176,6 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
                     eth_path)
 
         if peer_link:
-            eth_path = transform_port_numbers(intdict, [eth_type] + eth_path)
             intdict = update_dict_in_path(intdict, eth_path, {})
             continue
 
@@ -211,7 +210,6 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
             vpc_id = line.re_match(r"vpc (\d*)$")
             thisint.update({"vpc": int(vpc_id)})
 
-        eth_path = transform_port_numbers(intdict, [eth_type] + eth_path)
         intdict = update_dict_in_path(intdict, eth_path, thisint)
 
 
