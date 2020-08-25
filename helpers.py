@@ -88,6 +88,20 @@ def parse_svi(conf, svidict):
     return svidict
 
 
+def transform_port_numbers(dic, path):
+    # path should look like
+    # ["Ethernet", 1, 1, 36]
+    if len(path) == 3:
+        is_ethernet = True if path[0] == "Ethernet" else False
+        is_secondary_module = True if path[1] > 1 and path[1] < 100 else False
+
+        if is_ethernet and is_secondary_module:
+            ports_in_mod1 = len(dic["Ethernet"][1])
+            path[1] = 1
+            path[2] = path[2] + ports_in_mod1
+
+    return path
+
 def update_dict_in_path(dic, path, value):
     try:
         isinstance(dic[path[0]], dict)
@@ -133,6 +147,8 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
                 is_fex = True
 
         if is_fex:
+            eth_path = transform_port_numbers(intdict, [eth_type] + eth_path)
+            intdict = update_dict_in_path(intdict, eth_path, {})
             continue
 
         # Add interface membership to channel-group
@@ -160,6 +176,8 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
                     eth_path)
 
         if peer_link:
+            eth_path = transform_port_numbers(intdict, [eth_type] + eth_path)
+            intdict = update_dict_in_path(intdict, eth_path, {})
             continue
 
         for line in eth.re_search_children("switchport trunk native vlan"):
@@ -193,7 +211,8 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
             vpc_id = line.re_match(r"vpc (\d*)$")
             thisint.update({"vpc": int(vpc_id)})
 
-        intdict = update_dict_in_path(intdict, [eth_type] + eth_path, thisint)
+        eth_path = transform_port_numbers(intdict, [eth_type] + eth_path)
+        intdict = update_dict_in_path(intdict, eth_path, thisint)
 
 
     fabric[swid] = thisswitch
