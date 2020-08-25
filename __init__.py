@@ -27,9 +27,7 @@ sw2_switched = sw2.find_objects(r"interface (port-channel|Ethernet).*")
 # This will hold information about all the switches in the DC, organised in pairs
 # [{300: {}, 301: {}}, {302: {}, 303:{}}]
 swpair = []
-allint = {'switch': {}, 'fex': {}}
 sw1_parsed = parse_switched_interface(sw1_switched, 1, l2dict)
-
 sw2_parsed = parse_switched_interface(sw2_switched, 2, l2dict, sw1_parsed)
 
 a = sw2_parsed[1]["Ethernet"][1]
@@ -49,7 +47,7 @@ for k, v in sw2_parsed[1]['port-channel'].items():
                         print(f"Warning, vpc {v['vpc']} {k2} does not match on both switches")
 
 
-swpair.append(allint)
+swpair.append(sw2_parsed)
 
 out = {'fabric': swpair,
        'network': agg_l3}
