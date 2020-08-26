@@ -62,7 +62,8 @@ def parse_svi(conf, svidict):
             thissvi.update({"vrf": vrf_name})
 
         for vrf in svi.re_search_children("ip address"):
-            ip_text = vrf.re_match(r"ip address (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2})")
+            ip_text = vrf.re_match(
+                r"ip address (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/\d{1,2})")
             address = ipaddress.ip_interface(ip_text)
             ip = str(address.ip)
             netmask = str(address.netmask)
@@ -70,7 +71,8 @@ def parse_svi(conf, svidict):
 
         for hsrp in svi.re_search_children(r"hsrp \d"):
             for address in hsrp.re_search_children("ip"):
-                hsrp_ip = address.re_match(r"ip (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
+                hsrp_ip = address.re_match(
+                    r"ip (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})")
                 thissvi.update({"ip_address": hsrp_ip})
 
         thissvi.update({"shutdown": False})
@@ -95,7 +97,7 @@ def transform_port_numbers(dic, path):
     path should look like
     ["Ethernet", 1, 1, 36]
     """
-    
+
     if len(path) == 3:
         is_ethernet = True if path[0] == "Ethernet" else False
         is_secondary_module = True if path[1] > 1 and path[1] < 100 else False
@@ -107,19 +109,20 @@ def transform_port_numbers(dic, path):
 
     return path
 
+
 def update_dict_in_path(dic, path, value):
     try:
         isinstance(dic[path[0]], dict)
     except:
         dic[path[0]] = {}
-    
+
     if len(path) == 1:
         dic[path[0]].update(value)
         return dic
 
     else:
         inner = update_dict_in_path(dic[path[0]], path[1:], value)
-        #dic[path[0]].update(inner)
+        # dic[path[0]].update(inner)
         return dic
 
 
@@ -171,7 +174,7 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
             # Peer-link, skip this interface
             if len(eth.re_search_children(r"vpc peer-link")) != 0:
                 peer_link = True
-            
+
             if peer_link is False:
                 if channel_group_id not in port_channels:
                     port_channels[channel_group_id] = {'members': []}
@@ -217,7 +220,6 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
 
         intdict = update_dict_in_path(intdict, eth_path, thisint)
 
-
     fabric[swid] = thisswitch
     fabric[swid].update(intdict)
 
@@ -227,6 +229,7 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
         fabric[swid]['port-channel'][k].update(v)
 
     return fabric
+
 
 def match_vpc(row_config):
     # Takes in input of parse_switched_interface
@@ -241,7 +244,7 @@ def match_vpc(row_config):
                 po_w_vpc.append(vpc_id)
                 if pov['vpc'] not in vpc:
                     vpc[vpc_id] = {}
-                
+
                 if 'description' in pov:
                     vpc[vpc_id].update({'description': pov['description']})
 
@@ -250,7 +253,7 @@ def match_vpc(row_config):
 
                 if 'native_vlan' in pov:
                     vpc[vpc_id].update({'native_vlan': pov['native_vlan']})
-                        
+
                 if 'allowed_vlan' in pov:
                     vpc[vpc_id].update({'allowed_vlan': pov['allowed_vlan']})
 
@@ -262,21 +265,17 @@ def match_vpc(row_config):
                     else:
                         vpc[vpc_id].update({'members': members})
 
-        
-        #Delete port channel with vpc but keep description
+        # Delete port channel with vpc but keep description
         for i in po_w_vpc:
             intf = v['port-channel'][i]
             keystodelete = []
             for intk, intv in intf.items():
                 if intk != 'description':
                     keystodelete.append(intk)
-            
+
             for intk in keystodelete:
                 del(intf[intk])
-                
 
     row_config.update({'vpc': vpc})
 
     return row_config
-                        
-                           
