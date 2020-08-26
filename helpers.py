@@ -223,7 +223,6 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
 
     return fabric
 
-
 def match_vpc(row_config):
     # Takes in input of parse_switched_interface
     # Peers vpc configs in one single line
@@ -259,9 +258,17 @@ def match_vpc(row_config):
                         vpc[vpc_id].update({'members': members})
 
         
-        #Delete port channel with vpc
+        #Delete port channel with vpc but keep description
         for i in po_w_vpc:
-            del(v['port-channel'][i])
+            intf = v['port-channel'][i]
+            keystodelete = []
+            for intk, intv in intf.items():
+                if intk != 'description':
+                    keystodelete.append(intk)
+            
+            for intk in keystodelete:
+                del(intf[intk])
+                
 
     row_config.update({'vpc': vpc})
 
