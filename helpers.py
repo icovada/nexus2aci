@@ -89,8 +89,13 @@ def parse_svi(conf, svidict):
 
 
 def transform_port_numbers(dic, path):
-    # path should look like
-    # ["Ethernet", 1, 1, 36]
+    """
+    This function "flattens" port numbers, transforming module
+    3 and 4 interface numbers as if everything was module 1
+    path should look like
+    ["Ethernet", 1, 1, 36]
+    """
+    
     if len(path) == 3:
         is_ethernet = True if path[0] == "Ethernet" else False
         is_secondary_module = True if path[1] > 1 and path[1] < 100 else False
