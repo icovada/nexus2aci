@@ -1,3 +1,5 @@
+import collections.abc
+
 def traverse_dict(dict, path):
     """gets a value in nested dictionaries across path"""
     if len(path) == 1:
@@ -14,3 +16,20 @@ def find_key(d, value):
                 return [k] + p
         elif v == value:
             return [k]
+
+
+def flatten(fabric, newfabric={}, prefix=""):
+    for k, v in fabric.items():
+        if not isinstance(v, dict) or len(v) == 0:
+            return "end"
+
+        if prefix == "":
+            thisprefix = str(k)
+        else:
+            thisprefix = prefix + "/" + str(k)
+
+        deeper = flatten(v, newfabric, thisprefix)
+        if deeper == "end":
+            newfabric[thisprefix] = v
+
+    return newfabric
