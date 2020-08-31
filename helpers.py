@@ -129,7 +129,6 @@ def update_dict_in_path(dic, path, value):
 def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
     # Parse switched interface and expand vlan list
     # l2dict is passed through to allowed_vlan_to_list
-    intdict = {}
     thisswitch = []
     if fabric is None:
         fabric = []
@@ -139,7 +138,7 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
         eth_type = eth.re_match(r"interface ([A-Za-z\-]*)(\/*\d*)+")
         eth_id = eth.re_match(r"interface [A-Za-z\-]*((\/*\d*)+)")
 
-        thisint = {'name': str(swid) + "/" + eth_type + eth_id}
+        thisint = {'name': eth_type + eth_id}
         # find description
         for line in eth.re_search_children("description"):
             description = line.re_match(r"description (.*)$")
@@ -212,9 +211,34 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
 
         thisswitch.append(thisint)
 
-    fabric = fabric + thisswitch
+    match_port_channel(thisswitch)
+
+    for interface in thisswitch:
+        interface['name'] = str(swid) + "/" + interface['name']
+        fabric.append(interface)
 
     return fabric
+
+
+def match_port_channel(one_nexus_config):
+    """
+    Takes in 'thisswitch' from parse_switched_interface
+    Returns list of port channels with members
+    """
+
+    # Find list of all port channels
+    for po_int in one_nexus_config:
+        if 'name' in po_int:
+            if 'port-channel' in po_int['name']:
+                po_id = int(po_int['name'][12:])
+                po_int['members'] = []
+                for eth_int in one_nexus_config:
+                    if 'name' in eth_int:
+                        if 'Ethernet' in eth_int['name']:
+                            if 'channel-group' in eth_int:
+                                if eth_int['channel-group'] == po_id:
+                                    po_int['members'].append(eth_int)
+
 
 
 def match_vpc(row_config):
