@@ -130,19 +130,16 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
     # Parse switched interface and expand vlan list
     # l2dict is passed through to allowed_vlan_to_list
     intdict = {}
-    port_channels = {}
-    thisswitch = {'port-channel': {}}
+    thisswitch = []
     if fabric is None:
-        fabric = {}
+        fabric = []
 
     for eth in interfaces:
         # Split interface name in various pieces
         eth_type = eth.re_match(r"interface ([A-Za-z\-]*)(\/*\d*)+")
         eth_id = eth.re_match(r"interface [A-Za-z\-]*((\/*\d*)+)")
-        eth_path = [int(x) for x in eth_id.split("/")]
-        eth_path = transform_port_numbers(intdict, [eth_type] + eth_path)
 
-        thisint = {}
+        thisint = {'name': str(swid) + "/" + eth_type + eth_id}
         # find description
         for line in eth.re_search_children("description"):
             description = line.re_match(r"description (.*)$")
@@ -156,7 +153,7 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
                 is_fex = True
 
         if is_fex:
-            intdict = update_dict_in_path(intdict, eth_path, {})
+            thisswitch.append(thisint)
             continue
 
         # Add interface membership to channel-group
@@ -176,15 +173,10 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
                 peer_link = True
 
             if peer_link is False:
-                if channel_group_id not in port_channels:
-                    port_channels[channel_group_id] = {'members': []}
-
-                port_channels[channel_group_id].update({'lacp': lacp})
-                port_channels[channel_group_id]['members'].append(
-                    eth_path)
+                thisint.update({'channel-group': channel_group_id})
 
         if peer_link:
-            intdict = update_dict_in_path(intdict, eth_path, {})
+            thisswitch.append(thisint)
             continue
 
         for line in eth.re_search_children("switchport trunk native vlan"):
@@ -218,15 +210,9 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
             vpc_id = line.re_match(r"vpc (\d*)$")
             thisint.update({"vpc": int(vpc_id)})
 
-        intdict = update_dict_in_path(intdict, eth_path, thisint)
+        thisswitch.append(thisint)
 
-    fabric[swid] = thisswitch
-    fabric[swid].update(intdict)
-
-    for k, v in port_channels.items():
-        if k not in fabric[swid]['port-channel']:
-            continue
-        fabric[swid]['port-channel'][k].update(v)
+    fabric = fabric + thisswitch
 
     return fabric
 
