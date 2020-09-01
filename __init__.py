@@ -1,5 +1,5 @@
 import yaml
-from helpers import *
+from libs import *
 
 # parse configs for access and distribution switches
 # you should theoretically add all switches in the DC
