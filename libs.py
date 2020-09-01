@@ -173,9 +173,9 @@ def parse_switched_interface(interfaces, l2dict=None):
             native_vlan = int(line.re_match(r"switchport access vlan (.*)$"))
             thisint.update({"native_vlan": native_vlan})
 
-        for line in eth.re_search_children(r"switchport trunk allowed vlan ([0-9\-\,]*)$$"):
+        for line in eth.re_search_children(r"switchport trunk allowed vlan ([0-9\-\,]*)$"):
             allowed_vlan = line.re_match(
-                r"switchport trunk allowed vlan ([0-9\-\,]*)$$")
+                r"switchport trunk allowed vlan ([0-9\-\,]*)$")
             allowed_vlan_list = allowed_vlan_to_list(allowed_vlan, l2dict)
 
             if "native_vlan" in locals():
