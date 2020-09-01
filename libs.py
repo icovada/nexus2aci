@@ -376,7 +376,7 @@ def consolidate_interfaces(wholefabric, inttype):
                 except KeyError:
                     pass
 
-            if len(allowed_vlan) > 1:
+            if len(allowed_vlan) > 0:
                 interface['allowed_vlan'] = allowed_vlan
 
             if protocol is not None:
