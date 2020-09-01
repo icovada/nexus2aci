@@ -238,7 +238,6 @@ def match_port_channel(one_nexus_config):
     Returns list of port channels with members
     """
 
-    emptypo = []
     # Find list of all port channels
     for po_int in one_nexus_config:
         if 'name' in po_int:
@@ -253,10 +252,7 @@ def match_port_channel(one_nexus_config):
                                     po_int['members'].append(eth_int)
 
                 if len(po_int['members']) == 0:
-                    emptypo.append(po_int)
-    
-    for i in emptypo:
-        one_nexus_config.remove(i)
+                    one_nexus_config.remove(po_int)
 
     return one_nexus_config
 
