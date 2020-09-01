@@ -222,16 +222,11 @@ def parse_switched_interface(interfaces, l2dict=None):
             vpc_id = line.re_match(r"vpc (\d*)$")
             thisint.update({"vpc": int(vpc_id)})
 
-        thisswitch.append(thisint)
+        # Check the interface has some actual config, otherwise discard
+        if len(thisint) > 1:
+            thisswitch.append(thisint)
 
-    return thisswitch    
-
-
-    for interface in thisswitch:
-        interface['name'] = str(swid) + "/" + interface['name']
-        fabric.append(interface)
-
-    return fabric
+    return thisswitch
 
 
 def match_port_channel(one_nexus_config):
@@ -240,8 +235,8 @@ def match_port_channel(one_nexus_config):
     Returns list of port channels with members
     """
 
+    emptypo = []
     # Find list of all port channels
-    polist = []
     for po_int in one_nexus_config:
         if 'name' in po_int:
             if 'port-channel' in po_int['name']:
@@ -253,11 +248,14 @@ def match_port_channel(one_nexus_config):
                             if 'channel-group' in eth_int:
                                 if eth_int['channel-group'] == po_id:
                                     po_int['members'].append(eth_int)
+
+                if len(po_int['members']) == 0:
+                    emptypo.append(po_int)
     
+    for i in emptypo:
+        one_nexus_config.remove(i)
+
     return one_nexus_config
-
-    
-
 
 
 def match_vpc(row_config, sw1_id, sw2_id):
