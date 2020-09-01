@@ -1,43 +1,26 @@
-import ciscoconfparse
 import yaml
 from helpers import *
 
 # parse configs for access and distribution switches
 # you should theoretically add all switches in the DC
-sw1 = ciscoconfparse.CiscoConfParse('SWISNA-NGDC5K-L1.log')
-sw2 = ciscoconfparse.CiscoConfParse('SWISNA-NGDC5K-L2.log')
-aggregation = ciscoconfparse.CiscoConfParse('AGGSNANGDC-1.txt')
 
-# Combine info for VLANs for all switches.
-# Just one switch could do, but why not showing off?
-sw1_l2 = parse_vlan_l2(sw1)
-sw2_l2 = parse_vlan_l2(sw2, sw1_l2)
-l2dict = parse_vlan_l2(aggregation, sw2_l2)
-
-# Combine info from all layer3 switches, passing in the vlan info from the previous step
-sw1_l3 = parse_svi(sw1, l2dict)
-sw2_l3 = parse_svi(sw2, sw1_l3)
-agg_l3 = parse_svi(aggregation, sw1_l3)
+entiregdc = {'agg': parse_nexus_pair_l2('AGGSNANGDC-1.nxos', 'AGGSNANGDC-1.nxos'),
+                   'aggp': parse_nexus_pair_l2('AGGSNANGDCP-1.nxos', 'AGGSNANGDCP-2.nxos'),
+                   'core': parse_nexus_pair_l2('CORESNANGDC-1.nxos', 'CORESNANGDC-2.nxos'),
+                   'core': parse_nexus_pair_l2('CORESNANGDC-1.nxos', 'CORESNANGDC-2.nxos'),
+                   'H1-2': parse_nexus_pair_l2('SWISNA-NGDC5K-H1.nxos', 'SWISNA-NGDC5K-H2.nxos'),
+                   'H3-4': parse_nexus_pair_l2('SWISNA-NGDC5K-H3.nxos', 'SWISNA-NGDC5K-H4.nxos'),
+                   'L1-2': parse_nexus_pair_l2('SWISNA-NGDC5K-L1.nxos', 'SWISNA-NGDC5K-L2.nxos'),
+                   'L3-4': parse_nexus_pair_l2('SWISNA-NGDC5K-L3.nxos', 'SWISNA-NGDC5K-L4.nxos'),
+                   'L5-6': parse_nexus_pair_l2('SWISNA-NGDC5K-L5.nxos', 'SWISNA-NGDC5K-L6.nxos'),
+                   }
 
 
-# Filter all switched interfaces from access switches
-sw1_switched = sw1.find_objects(r"interface (port-channel|Ethernet).*")
-sw2_switched = sw2.find_objects(r"interface (port-channel|Ethernet).*")
+flat = flatten_dict(entiregdc)
 
-# This will hold information about all the switches in the DC, organised in pairs
-# [{300: {}, 301: {}}, {302: {}, 303:{}}]
-swpair = []
-sw1_parsed = parse_switched_interface(sw1_switched, l2dict)
-sw2_parsed = parse_switched_interface(sw2_switched, l2dict)
+with open('entiregdc.yml', 'w') as f:
+       f.write(yaml.dump(flat))
 
-match_port_channel(sw1_parsed)
-match_port_channel(sw2_parsed)
-
-cage = {1: sw1_parsed, 2: sw2_parsed}
-
-cage_config = match_vpc(cage, 1, 2)
-
-flat = flatten_dict(cage_config)
 
 
 # # Check config matches on both sides. Raise exception if misaligned
@@ -51,12 +34,3 @@ flat = flatten_dict(cage_config)
 #                         assert v2 == cage_config[2]['port-channel'][k][k2]
 #                     except AssertionError:
 #                         print(f"Warning, vpc {v['vpc']} {k2} does not match on both switches")
-
-
-swpair.append(sw2_parsed)
-
-out = {'fabric': swpair,
-       'network': agg_l3}
-
-with open("out.yml", "w") as f:
-    f.write(yaml.dump(cage_config))
