@@ -222,9 +222,12 @@ def parse_switched_interface(interfaces, l2dict=None):
             vpc_id = line.re_match(r"vpc (\d*)$")
             thisint.update({"vpc": int(vpc_id)})
 
-        # Check the interface has some actual config, otherwise discard
-        if len(thisint) > 1:
-            thisswitch.append(thisint)
+        thisswitch.append(thisint)
+
+    for interface in thisswitch:
+        # Remove interfaces with only names
+        if len(interface) == 1:
+            thisswitch.remove(interface)
 
     return thisswitch
 
@@ -280,8 +283,16 @@ def match_vpc(row_config, sw1_id, sw2_id):
                             if interface2['vpc'] == thisvpcid:
                                 thisvpc['members'].append(interface2)
                                 break
-
-                vpc.append(thisvpc)
+                
+                # Some VPC might only have one member
+                # This happens because one of the port-channels is empty
+                # and has been deleted in the previous step
+                if len(thisvpc['members']) == 2:
+                    vpc.append(thisvpc)
+                elif len(thisvpc['members']) == 1:
+                    pass
+                else:
+                    raise ValueError("Wrong number of VPC members")
 
     row_config['vpc'] = vpc
     return row_config
