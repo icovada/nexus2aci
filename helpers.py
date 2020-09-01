@@ -266,6 +266,7 @@ def match_vpc(row_config, sw1_id, sw2_id):
                         if "vpc" in interface2:
                             if interface2['vpc'] == thisvpcid:
                                 thisvpc['members'].append(interface2)
+                                break
 
                 vpc.append(thisvpc)
 
@@ -277,11 +278,12 @@ def flatten_dict(row_config):
     "Flattens outout of match_vpc"
     out = []
     for k, v in row_config.items():
+        if k == 'vpc':
+            separator = "-"
+        else:
+            separator = "/"
+
         for interface in v:
-            if k == 'vpc':
-                separator = "-"
-            else:
-                separator = "/"
             interface['name'] = str(k) + separator + interface['name']
             out.append(interface)
 
