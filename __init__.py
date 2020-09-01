@@ -27,13 +27,17 @@ sw2_switched = sw2.find_objects(r"interface (port-channel|Ethernet).*")
 # This will hold information about all the switches in the DC, organised in pairs
 # [{300: {}, 301: {}}, {302: {}, 303:{}}]
 swpair = []
-sw1_parsed = parse_switched_interface(sw1_switched, 1, l2dict)
-sw2_parsed = parse_switched_interface(sw2_switched, 2, l2dict, sw1_parsed)
+sw1_parsed = parse_switched_interface(sw1_switched, l2dict)
+sw2_parsed = parse_switched_interface(sw2_switched, l2dict)
 
+match_port_channel(sw1_parsed)
+match_port_channel(sw2_parsed)
 
-cage_config = match_vpc(sw2_parsed)
+cage = {1: sw1_parsed, 2: sw2_parsed}
 
+cage_config = match_vpc(cage, 1, 2)
 
+flat = flatten_dict(cage_config)
 
 
 # # Check config matches on both sides. Raise exception if misaligned

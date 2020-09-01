@@ -126,12 +126,10 @@ def update_dict_in_path(dic, path, value):
         return dic
 
 
-def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
+def parse_switched_interface(interfaces, l2dict=None):
     # Parse switched interface and expand vlan list
     # l2dict is passed through to allowed_vlan_to_list
     thisswitch = []
-    if fabric is None:
-        fabric = []
 
     for eth in interfaces:
         # Split interface name in various pieces
@@ -211,7 +209,8 @@ def parse_switched_interface(interfaces, swid, l2dict=None, fabric=None):
 
         thisswitch.append(thisint)
 
-    match_port_channel(thisswitch)
+    return thisswitch    
+
 
     for interface in thisswitch:
         interface['name'] = str(swid) + "/" + interface['name']
@@ -227,6 +226,7 @@ def match_port_channel(one_nexus_config):
     """
 
     # Find list of all port channels
+    polist = []
     for po_int in one_nexus_config:
         if 'name' in po_int:
             if 'port-channel' in po_int['name']:
@@ -238,54 +238,100 @@ def match_port_channel(one_nexus_config):
                             if 'channel-group' in eth_int:
                                 if eth_int['channel-group'] == po_id:
                                     po_int['members'].append(eth_int)
+    
+    return one_nexus_config
+
+    
 
 
 
-def match_vpc(row_config):
+def match_vpc(row_config, sw1_id, sw2_id):
     # Takes in input of parse_switched_interface
     # Peers vpc configs in one single line
 
-    vpc = {}
-    for k, v in row_config.items():
-        po_w_vpc = []
-        for pok, pov in v['port-channel'].items():
-            if 'vpc' in pov:
-                vpc_id = pov['vpc']
-                po_w_vpc.append(vpc_id)
-                if pov['vpc'] not in vpc:
-                    vpc[vpc_id] = {}
+    vpc = []
+    # Cycle all interfaces in switch 1
+    for interface in row_config[sw1_id]:
+        if "port-channel" in interface['name']:
+            thisvpc = {'members': []}
+            # Find port-channels assigned to a vpc
+            if 'vpc' in interface:
+                # Create vpc object, add pointer to interface in members
+                thisvpcid = interface['vpc']
+                thisvpc['name'] = str(thisvpcid)
+                thisvpc['members'].append(interface)
+                # Find other vpc member in second switch
+                for interface2 in row_config[sw2_id]:
+                    if "port-channel" in interface2['name']:
+                        if "vpc" in interface2:
+                            if interface2['vpc'] == thisvpcid:
+                                thisvpc['members'].append(interface2)
 
-                if 'description' in pov:
-                    vpc[vpc_id].update({'description': pov['description']})
+                vpc.append(thisvpc)
 
-                if 'lacp' in pov:
-                    vpc[vpc_id].update({'lacp': pov['lacp']})
-
-                if 'native_vlan' in pov:
-                    vpc[vpc_id].update({'native_vlan': pov['native_vlan']})
-
-                if 'allowed_vlan' in pov:
-                    vpc[vpc_id].update({'allowed_vlan': pov['allowed_vlan']})
-
-                if 'members' in pov:
-                    # Add switch ID to interface name
-                    members = [[k] + x for x in pov['members']]
-                    if 'members' in vpc[vpc_id]:
-                        vpc[vpc_id]['members'] = vpc[vpc_id]['members'] + members
-                    else:
-                        vpc[vpc_id].update({'members': members})
-
-        # Delete port channel with vpc but keep description
-        for i in po_w_vpc:
-            intf = v['port-channel'][i]
-            keystodelete = []
-            for intk, intv in intf.items():
-                if intk != 'description':
-                    keystodelete.append(intk)
-
-            for intk in keystodelete:
-                del(intf[intk])
-
-    row_config.update({'vpc': vpc})
-
+    row_config['vpc'] = vpc
     return row_config
+
+
+def flatten_dict(row_config):
+    "Flattens outout of match_vpc"
+    out = []
+    for k, v in row_config.items():
+        for interface in v:
+            if k == 'vpc':
+                separator = "-"
+            else:
+                separator = "/"
+            interface['name'] = str(k) + separator + interface['name']
+            out.append(interface)
+
+    return out
+                    
+            
+
+
+
+
+    # for k, v in row_config.items():
+    #     po_w_vpc = []
+    #     for pok, pov in v['port-channel'].items():
+    #         if 'vpc' in pov:
+    #             vpc_id = pov['vpc']
+    #             po_w_vpc.append(vpc_id)
+    #             if pov['vpc'] not in vpc:
+    #                 vpc[vpc_id] = {}
+
+    #             if 'description' in pov:
+    #                 vpc[vpc_id].update({'description': pov['description']})
+
+    #             if 'lacp' in pov:
+    #                 vpc[vpc_id].update({'lacp': pov['lacp']})
+
+    #             if 'native_vlan' in pov:
+    #                 vpc[vpc_id].update({'native_vlan': pov['native_vlan']})
+
+    #             if 'allowed_vlan' in pov:
+    #                 vpc[vpc_id].update({'allowed_vlan': pov['allowed_vlan']})
+
+    #             if 'members' in pov:
+    #                 # Add switch ID to interface name
+    #                 members = [[k] + x for x in pov['members']]
+    #                 if 'members' in vpc[vpc_id]:
+    #                     vpc[vpc_id]['members'] = vpc[vpc_id]['members'] + members
+    #                 else:
+    #                     vpc[vpc_id].update({'members': members})
+
+    #     # Delete port channel with vpc but keep description
+    #     for i in po_w_vpc:
+    #         intf = v['port-channel'][i]
+    #         keystodelete = []
+    #         for intk, intv in intf.items():
+    #             if intk != 'description':
+    #                 keystodelete.append(intk)
+
+    #         for intk in keystodelete:
+    #             del(intf[intk])
+
+    # row_config.update({'vpc': vpc})
+
+    # return row_config
