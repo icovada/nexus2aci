@@ -164,6 +164,7 @@ def parse_switched_interface(interfaces, l2dict=None):
             thisswitch.append(thisint)
             continue
 
+        native_vlan = None
         for line in eth.re_search_children("switchport trunk native vlan"):
             native_vlan = int(line.re_match(
                 r"switchport trunk native vlan (.*)$"))
@@ -178,7 +179,7 @@ def parse_switched_interface(interfaces, l2dict=None):
                 r"switchport trunk allowed vlan ([0-9\-\,]*)$")
             allowed_vlan_list = allowed_vlan_to_list(allowed_vlan, l2dict)
 
-            if "native_vlan" in locals():
+            if "native_vlan" is not None:
                 try:
                     allowed_vlan_list.remove(native_vlan)
                 except ValueError:
