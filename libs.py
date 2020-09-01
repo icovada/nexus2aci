@@ -143,9 +143,9 @@ def parse_switched_interface(interfaces, l2dict=None):
             channel_group_id = int(line.re_match(r"channel-group (\d*)"))
             mode = line.re_match(r"mode (\w*)")
             if mode == 'active':
-                protocol = 'lacp'
+                protocol = 'lacp-active'
             elif mode == 'passive':
-                protocol = 'pagp'
+                protocol = 'lacp-passive'
             elif mode == '':
                 protocol = None
             else:
