@@ -159,11 +159,15 @@ def parse_switched_interface(interfaces, l2dict=None):
             channel_group_id = int(line.re_match(r"channel-group (\d*)"))
             mode = line.re_match(r"mode (\w*)")
             if mode == 'active':
-                lacp = True
+                protocol = 'lacp'
+            elif mode == 'passive':
+                protocol = 'pagp'
             elif mode == '':
-                lacp = False
+                protocol = None
             else:
-                raise ValueError("What is PaGP still doing in prod")
+                raise ValueError("Could not parse link aggregation protcol")
+
+            thisint['protocol'] = protocol
 
             # Peer-link, skip this interface
             if len(eth.re_search_children(r"vpc peer-link")) != 0:
@@ -185,9 +189,9 @@ def parse_switched_interface(interfaces, l2dict=None):
             native_vlan = int(line.re_match(r"switchport access vlan (.*)$"))
             thisint.update({"native_vlan": native_vlan})
 
-        for line in eth.re_search_children("switchport trunk allowed vlan"):
+        for line in eth.re_search_children(r"switchport trunk allowed vlan ([0-9\-\,]*)$$"):
             allowed_vlan = line.re_match(
-                r"switchport trunk allowed vlan (.*)$")
+                r"switchport trunk allowed vlan ([0-9\-\,]*)$$")
             allowed_vlan_list = allowed_vlan_to_list(allowed_vlan, l2dict)
 
             if "native_vlan" in locals():
@@ -198,6 +202,17 @@ def parse_switched_interface(interfaces, l2dict=None):
 
             if len(allowed_vlan_list) != 0:
                 thisint.update({"allowed_vlan": allowed_vlan_list})
+
+        for line in eth.re_search_children("switchport trunk allowed vlan add"):
+            # In some cases a vlan list might be split over multiple lines
+            # switchport trunk allowed vlan 3-4,6,9-10,25,50,88-89,91-99,110
+            # switchport trunk allowed vlan add 700-704,800,802-803,810,1100-1101
+
+            allowed_vlan = line.re_match(
+                r"switchport trunk allowed vlan add ([0-9\-\,]*)$$")
+            allowed_vlan_list = allowed_vlan_to_list(allowed_vlan, l2dict)
+
+            thisint['allowed_vlan'] = thisint['allowed_vlan'] + allowed_vlan_list
 
         if "native_vlan" not in thisint:
             if mode == "access":
