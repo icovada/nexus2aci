@@ -41,7 +41,7 @@ def parse_vlan_l2(conf, l2dict=None):
 
 
 def parse_svi(conf, svidict):
-    """ 
+    """
     Returns a dictionary with vlan names and l3 info.
     'svidict' must be output of parse_vlan_l2
     """
@@ -108,22 +108,6 @@ def transform_port_numbers(dic, path):
             path[2] = path[2] + ports_in_mod1
 
     return path
-
-
-def update_dict_in_path(dic, path, value):
-    try:
-        isinstance(dic[path[0]], dict)
-    except:
-        dic[path[0]] = {}
-
-    if len(path) == 1:
-        dic[path[0]].update(value)
-        return dic
-
-    else:
-        inner = update_dict_in_path(dic[path[0]], path[1:], value)
-        # dic[path[0]].update(inner)
-        return dic
 
 
 def parse_switched_interface(interfaces, l2dict=None):
@@ -279,7 +263,7 @@ def match_vpc(row_config, sw1_id, sw2_id):
                             if interface2['vpc'] == thisvpcid:
                                 thisvpc['members'].append(interface2)
                                 break
-                
+
                 # Some VPC might only have one member
                 # This happens because one of the port-channels is empty
                 # and has been deleted in the previous step
@@ -308,8 +292,8 @@ def flatten_dict(row_config):
             out.append(interface)
 
     return out
-                    
-            
+
+
 def parse_nexus_pair_l2(conf1, conf2):
     # parse configs for access and distribution switches
     # you should theoretically add all switches in the DC
@@ -320,7 +304,7 @@ def parse_nexus_pair_l2(conf1, conf2):
     # Just one switch could do, but why not showing off?
     sw1_l2 = parse_vlan_l2(sw1)
     l2dict = parse_vlan_l2(sw2, sw1_l2)
-    
+
     # Filter all switched interfaces from access switches
     sw1_switched = sw1.find_objects(r"^interface (port-channel|Ethernet).*")
     sw2_switched = sw2.find_objects(r"^interface (port-channel|Ethernet).*")
