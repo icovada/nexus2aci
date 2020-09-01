@@ -341,23 +341,46 @@ def consolidate_interfaces(wholefabric, inttype):
             protocol = None
             native_vlan = None
             for member in interface['members']:
-                if "allowed_vlan" in member:
+                try:
                     for vlan in member['allowed_vlan']:
                         if vlan not in allowed_vlan:
                             allowed_vlan.append(vlan)
                     
                     del member['allowed_vlan']
+                except KeyError:
+                    pass
 
-                if "native_vlan" in member:
+                try:
                     if native_vlan is None:
                         native_vlan = member['native_vlan']
                     else:
                         assert native_vlan == member['native_vlan']
 
                     del member['native_vlan']
+                except KeyError:
+                    pass
 
-                if "protocol" in member:
+                try:
                     if protocol is None:
                         protocol = member['protocol']
                     else:
                         assert protocol == member['protocol']
+                    
+                    del member['protocol']
+                except KeyError:
+                    pass
+
+                try:
+                    del member['channel-group']
+                except KeyError:
+                    pass
+
+            if len(allowed_vlan) > 1:
+                interface['allowed_vlan'] = allowed_vlan
+
+            if protocol is not None:
+                interface['protocol'] = protocol
+
+            if native_vlan is not None:
+                interface['native_vlan'] = native_vlan
+
