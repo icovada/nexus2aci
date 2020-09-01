@@ -1,6 +1,6 @@
 import re
 import ipaddress
-
+import ciscoconfparse
 
 def allowed_vlan_to_list(vlanlist, l2dict=None):
     # Expands vlan ranges and checks if the vlan is in l2dict
@@ -290,50 +290,31 @@ def flatten_dict(row_config):
     return out
                     
             
+def parse_nexus_pair_l2(conf1, conf2):
+    # parse configs for access and distribution switches
+    # you should theoretically add all switches in the DC
+    sw1 = ciscoconfparse.CiscoConfParse(conf1)
+    sw2 = ciscoconfparse.CiscoConfParse(conf2)
 
+    # Combine info for VLANs for all switches.
+    # Just one switch could do, but why not showing off?
+    sw1_l2 = parse_vlan_l2(sw1)
+    l2dict = parse_vlan_l2(sw2, sw1_l2)
+    
+    # Filter all switched interfaces from access switches
+    sw1_switched = sw1.find_objects(r"^interface (port-channel|Ethernet).*")
+    sw2_switched = sw2.find_objects(r"^interface (port-channel|Ethernet).*")
 
+    sw1_parsed = parse_switched_interface(sw1_switched, l2dict)
+    sw2_parsed = parse_switched_interface(sw2_switched, l2dict)
 
+    match_port_channel(sw1_parsed)
+    match_port_channel(sw2_parsed)
 
-    # for k, v in row_config.items():
-    #     po_w_vpc = []
-    #     for pok, pov in v['port-channel'].items():
-    #         if 'vpc' in pov:
-    #             vpc_id = pov['vpc']
-    #             po_w_vpc.append(vpc_id)
-    #             if pov['vpc'] not in vpc:
-    #                 vpc[vpc_id] = {}
+    cage = {1: sw1_parsed, 2: sw2_parsed}
 
-    #             if 'description' in pov:
-    #                 vpc[vpc_id].update({'description': pov['description']})
+    cage_config = match_vpc(cage, 1, 2)
 
-    #             if 'lacp' in pov:
-    #                 vpc[vpc_id].update({'lacp': pov['lacp']})
+    flat = flatten_dict(cage_config)
 
-    #             if 'native_vlan' in pov:
-    #                 vpc[vpc_id].update({'native_vlan': pov['native_vlan']})
-
-    #             if 'allowed_vlan' in pov:
-    #                 vpc[vpc_id].update({'allowed_vlan': pov['allowed_vlan']})
-
-    #             if 'members' in pov:
-    #                 # Add switch ID to interface name
-    #                 members = [[k] + x for x in pov['members']]
-    #                 if 'members' in vpc[vpc_id]:
-    #                     vpc[vpc_id]['members'] = vpc[vpc_id]['members'] + members
-    #                 else:
-    #                     vpc[vpc_id].update({'members': members})
-
-    #     # Delete port channel with vpc but keep description
-    #     for i in po_w_vpc:
-    #         intf = v['port-channel'][i]
-    #         keystodelete = []
-    #         for intk, intv in intf.items():
-    #             if intk != 'description':
-    #                 keystodelete.append(intk)
-
-    #         for intk in keystodelete:
-    #             del(intf[intk])
-
-    # row_config.update({'vpc': vpc})
-
-    # return row_config
+    return flat
