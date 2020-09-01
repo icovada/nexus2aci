@@ -322,3 +322,38 @@ def parse_nexus_pair_l2(conf1, conf2):
     flat = flatten_dict(cage_config)
 
     return flat
+
+
+def consolidate_interfaces(wholefabric, inttype):
+    """
+    Take a list of interfaces, find port-channels and 
+    consolidate vlan membership between all interfaces
+    Then, do the same for vpcs
+    """
+
+    for interface in wholefabric:
+        if inttype in interface['name']:
+            allowed_vlan = []
+            protocol = None
+            native_vlan = None
+            for member in interface['members']:
+                if "allowed_vlan" in member:
+                    for vlan in member['allowed_vlan']:
+                        if vlan not in allowed_vlan:
+                            allowed_vlan.append(vlan)
+                    
+                    del member['allowed_vlan']
+
+                if "native_vlan" in member:
+                    if native_vlan is None:
+                        native_vlan = member['native_vlan']
+                    else:
+                        assert native_vlan == member['native_vlan']
+
+                    del member['native_vlan']
+
+                if "protocol" in member:
+                    if protocol is None:
+                        protocol = member['protocol']
+                    else:
+                        assert protocol == member['protocol']
