@@ -4,23 +4,22 @@ from helpers import *
 # parse configs for access and distribution switches
 # you should theoretically add all switches in the DC
 
-entiregdc = {'agg': parse_nexus_pair_l2('AGGSNANGDC-1.nxos', 'AGGSNANGDC-1.nxos'),
-                   'aggp': parse_nexus_pair_l2('AGGSNANGDCP-1.nxos', 'AGGSNANGDCP-2.nxos'),
-                   'core': parse_nexus_pair_l2('CORESNANGDC-1.nxos', 'CORESNANGDC-2.nxos'),
-                   'core': parse_nexus_pair_l2('CORESNANGDC-1.nxos', 'CORESNANGDC-2.nxos'),
-                   'H1-2': parse_nexus_pair_l2('SWISNA-NGDC5K-H1.nxos', 'SWISNA-NGDC5K-H2.nxos'),
-                   'H3-4': parse_nexus_pair_l2('SWISNA-NGDC5K-H3.nxos', 'SWISNA-NGDC5K-H4.nxos'),
-                   'L1-2': parse_nexus_pair_l2('SWISNA-NGDC5K-L1.nxos', 'SWISNA-NGDC5K-L2.nxos'),
-                   'L3-4': parse_nexus_pair_l2('SWISNA-NGDC5K-L3.nxos', 'SWISNA-NGDC5K-L4.nxos'),
-                   'L5-6': parse_nexus_pair_l2('SWISNA-NGDC5K-L5.nxos', 'SWISNA-NGDC5K-L6.nxos'),
-                   }
+entiredc = {'agg': parse_nexus_pair_l2('AGGSNANGDC-1.nxos', 'AGGSNANGDC-1.nxos'),
+            'aggp': parse_nexus_pair_l2('AGGSNANGDCP-1.nxos', 'AGGSNANGDCP-2.nxos'),
+            'core': parse_nexus_pair_l2('CORESNANGDC-1.nxos', 'CORESNANGDC-2.nxos'),
+            'core': parse_nexus_pair_l2('CORESNANGDC-1.nxos', 'CORESNANGDC-2.nxos'),
+            'H1-2': parse_nexus_pair_l2('SWISNA-NGDC5K-H1.nxos', 'SWISNA-NGDC5K-H2.nxos'),
+            'H3-4': parse_nexus_pair_l2('SWISNA-NGDC5K-H3.nxos', 'SWISNA-NGDC5K-H4.nxos'),
+            'L1-2': parse_nexus_pair_l2('SWISNA-NGDC5K-L1.nxos', 'SWISNA-NGDC5K-L2.nxos'),
+            'L3-4': parse_nexus_pair_l2('SWISNA-NGDC5K-L3.nxos', 'SWISNA-NGDC5K-L4.nxos'),
+            'L5-6': parse_nexus_pair_l2('SWISNA-NGDC5K-L5.nxos', 'SWISNA-NGDC5K-L6.nxos'),
+            }
 
 
-flat = flatten_dict(entiregdc)
+flat = flatten_dict(entiredc)
 
-with open('entiregdc.yml', 'w') as f:
-       f.write(yaml.dump(flat))
-
+with open('entiredc.yml', 'w') as f:
+    f.write(yaml.dump(flat))
 
 
 # # Check config matches on both sides. Raise exception if misaligned
