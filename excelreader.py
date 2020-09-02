@@ -3,6 +3,7 @@ import numpy as np
 import yaml
 import math
 from copy import deepcopy
+import pickle
 
 
 default_tenant = {'name': '',
@@ -112,5 +113,5 @@ for tenant in clean_tenant_list:
 
 fabric = {'tenant': alltenant}
 
-with open('fabric-cfg.yml', 'w') as f:
-    f.write(yaml.dump(fabric))
+with open("tempdata.bin", "rb") as data:
+    fabric['network'] = pickle.load(data)
