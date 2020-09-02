@@ -376,6 +376,15 @@ def consolidate_interfaces(wholefabric, inttype):
                 except KeyError:
                     pass
 
+                # Copy description up if description not yet existing
+                if "description" not in interface:
+                    try:
+                        interface['description'] = member['description']
+                    except KeyError:
+                        pass
+
+                member['ismember'] = True
+
             if len(allowed_vlan) > 0:
                 interface['allowed_vlan'] = allowed_vlan
 
