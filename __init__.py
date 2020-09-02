@@ -2,6 +2,7 @@ import yaml
 from libs import *
 from filelist import entiredc
 import csv
+import pickle
 
 
 parseddc = {}
@@ -14,6 +15,7 @@ consolidate_interfaces(flat, "port-channel")
 consolidate_interfaces(flat, "vpc")
 
 
+# Export interface names for renaming
 allintdata = []
 for i in flat:
     thisint = {"newname": ""}
@@ -28,3 +30,7 @@ with open("intnames.csv", "w") as csvfile:
     writer.writeheader()
     #for i in allintdata:
     writer.writerows(allintdata)
+
+
+with open("tempdata.bin", "wb") as tempdata:
+    pickle.dump(flat, tempdata)
