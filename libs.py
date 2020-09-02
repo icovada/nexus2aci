@@ -46,6 +46,7 @@ def parse_svi(conf, svidict):
     'svidict' must be output of parse_vlan_l2
     """
 
+    
     svis = conf.find_objects(r"^interface Vlan")
     for svi in svis:
         # Cut away "interface Vlan"
@@ -179,7 +180,7 @@ def parse_switched_interface(interfaces, l2dict=None):
                 r"switchport trunk allowed vlan ([0-9\-\,]*)$")
             allowed_vlan_list = allowed_vlan_to_list(allowed_vlan, l2dict)
 
-            if "native_vlan" is not None:
+            if native_vlan is not None:
                 try:
                     allowed_vlan_list.remove(native_vlan)
                 except ValueError:
@@ -393,4 +394,3 @@ def consolidate_interfaces(wholefabric, inttype):
 
             if native_vlan is not None:
                 interface['native_vlan'] = native_vlan
-
