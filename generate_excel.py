@@ -1,6 +1,7 @@
 import ciscoconfparse
 import yaml
-from helpers import parse_svi, parse_vlan_l2
+from libs import parse_svi, parse_vlan_l2
+from filelist import entiredc
 import pandas as pd
 
 
@@ -33,25 +34,23 @@ def tenant(rowdict):
     pass
 
 
-# parse configs for access and distribution switches
-# you should theoretically add all switches in the DC
-sw1 = ciscoconfparse.CiscoConfParse('SWISNA-NGDC5K-L1.log')
-sw2 = ciscoconfparse.CiscoConfParse('SWISNA-NGDC5K-L2.log')
-aggregation = ciscoconfparse.CiscoConfParse('AGGSNANGDC-1.txt')
+parsedconfs = []
+for k, v in entiredc.items():
+    for i in v:
+        parsedconfs.append(ciscoconfparse.CiscoConfParse(i))
 
-# Combine info for VLANs for all switches.
-# Just one switch could do, but why not showing off?
-sw1_l2 = parse_vlan_l2(sw1)
-sw2_l2 = parse_vlan_l2(sw2, sw1_l2)
-l2dict = parse_vlan_l2(aggregation, sw2_l2)
 
-# Combine info from all layer3 switches, passing in the vlan info from the previous step
-sw1_l3 = parse_svi(sw1, l2dict)
-sw2_l3 = parse_svi(sw2, sw1_l3)
-agg_l3 = parse_svi(aggregation, sw1_l3)
+l2dict = None
+for i in parsedconfs:
+    l2dict = parse_vlan_l2(i, l2dict)
+
+
+l3dict = l2dict
+for i in parsedconfs:
+    l3dict = parse_svi(i, l3dict)
 
 excelout = []
-for k, v in agg_l3.items():
+for k, v in l3dict.items():
     row = {}
     row['Vlan ID'] = k
     if 'name' in v:
