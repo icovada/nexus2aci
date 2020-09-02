@@ -4,6 +4,7 @@ import yaml
 import math
 from copy import deepcopy
 import pickle
+import csv
 
 
 default_tenant = {'name': '',
@@ -29,6 +30,7 @@ default_bd = {'name': '',
 
 
 excel = pd.read_excel("excelout.xlsx")
+
 
 tenant_list = excel.Tenant.unique().tolist()
 # remove nan from list
@@ -120,24 +122,26 @@ with open("tempdata.bin", "rb") as data:
     networkdata = pickle.load(data)
 
 
-i = 0
 for tenant in alltenant:
     for application in tenant['app']:
         for epg in application['epg']:
             for interface in networkdata:
+                if "ismember" in interface:
+                    continue
                 try:
                     if epg['old_vlan_tag'] in interface['allowed_vlan']:
-                        epg['static_path'].append({'interface': interface['name'],
+                        epg['static_path'].append({'interface': interface,
                                                    'tag': epg['old_vlan_tag']})
                 except KeyError:
                     pass
 
                 try:
                     if epg['old_vlan_tag'] == interface['native_vlan']:
-                        epg['static_path'].append({'interface': interface['name'],
+                        epg['static_path'].append({'interface': interface,
                                                    'tag': 1})
                 except KeyError:
                     pass
 
 
-alltenant[0]['app'][0]['epg'][0]
+
+
