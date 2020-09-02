@@ -64,6 +64,9 @@ for tenant in clean_tenant_list:
                 thisrow = thisbd.iloc[0]
                 vrf = thisrow['VRF-NEW']
                 bddict = deepcopy(default_bd)
+                vlanid = int(thisrow['Vlan ID'])
+
+
                 bddict.update({'name': bd,
                                'vrf': vrf})
 
@@ -87,7 +90,8 @@ for tenant in clean_tenant_list:
 
             epgdict = deepcopy(default_epg)
             epgdict.update({'name': epg,
-                            'bd': bddict['name']})
+                            'bd': bddict,
+                            'old_vlan_tag': vlanid})
             all_app_epg.append(epgdict)
 
             epgdict = deepcopy(default_epg)
@@ -111,7 +115,29 @@ for tenant in clean_tenant_list:
                        'vrf': clean_vrf_list})
     alltenant.append(tenantdict)
 
-fabric = {'tenant': alltenant}
 
 with open("tempdata.bin", "rb") as data:
-    fabric['network'] = pickle.load(data)
+    networkdata = pickle.load(data)
+
+
+i = 0
+for tenant in alltenant:
+    for application in tenant['app']:
+        for epg in application['epg']:
+            for interface in networkdata:
+                try:
+                    if epg['old_vlan_tag'] in interface['allowed_vlan']:
+                        epg['static_path'].append({'interface': interface['name'],
+                                                   'tag': epg['old_vlan_tag']})
+                except KeyError:
+                    pass
+
+                try:
+                    if epg['old_vlan_tag'] == interface['native_vlan']:
+                        epg['static_path'].append({'interface': interface['name'],
+                                                   'tag': 1})
+                except KeyError:
+                    pass
+
+
+alltenant[0]['app'][0]['epg'][0]
