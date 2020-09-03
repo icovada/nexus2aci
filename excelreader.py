@@ -31,6 +31,20 @@ default_bd = {'name': '',
 
 excel = pd.read_excel("excelout.xlsx")
 
+with open("tempdata.bin", "rb") as data:
+    networkdata = pickle.load(data)
+
+with open("intnames.csv", "r") as csvfile:
+    reader = csv.DictReader(csvfile)
+    for row in reader:
+        for interface in networkdata:
+            try:
+                if interface['name'] == row['name']:
+                    interface['newname'] = row['newname']
+                    break
+            except KeyError:
+                pass
+
 
 tenant_list = excel.Tenant.unique().tolist()
 # remove nan from list
@@ -116,11 +130,6 @@ for tenant in clean_tenant_list:
                        'bd': all_tenant_bd,
                        'vrf': clean_vrf_list})
     alltenant.append(tenantdict)
-
-
-with open("tempdata.bin", "rb") as data:
-    networkdata = pickle.load(data)
-
 
 for tenant in alltenant:
     for application in tenant['app']:
