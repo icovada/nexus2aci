@@ -6,6 +6,13 @@ from copy import deepcopy
 import pickle
 import csv
 
+from cobra.mit.access import MoDirectory
+from cobra.mit.session import LoginSession
+from cobra.mit.request import DnQuery
+from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd
+from cobra.mit.request import ConfigRequest
+
+import acicreds
 
 default_tenant = {'name': '',
                   'description': '',
@@ -152,5 +159,38 @@ for tenant in alltenant:
                     pass
 
 
+# Init ACI session
+loginSession = LoginSession(acicreds.url, acicreds.username, acicreds.password, secure=False)
+moDir = MoDirectory(loginSession)
+moDir.login()
+uniMo = moDir.lookupByDn('uni')
 
+for tenant in alltenant:
+    tenantconfig = ConfigRequest()
+    fvTenant = Tenant(uniMo, tenant['name'])
+    tenantconfig.addMo(fvTenant)
+    print(f"Creating tenant {tenant['name']}")
+    moDir.commit(tenantconfig)
 
+    for app in tenant['app']:
+        appconfig = ConfigRequest()
+        fvApp = Ap(fvTenant, app['name'])
+        appconfig.addMo(fvApp)
+        print(f"Creating APP {app['name']} in Tenant {tenant['name']}")
+        moDir.commit(appconfig)
+
+        for epg in app['epg']:
+            epgconfig = ConfigRequest()
+            fvAEPg = AEPg(fvApp, epg['name'])
+            epgconfig.addMo(fvAEPg)
+
+            fvBD = BD(fvTenant, epg['bd']['name'])
+            epgconfig.addMo(fvBD)
+            print(f"Creating EPG {epg['name']} and BD {epg['bd']['name']} in APP {app['name']}")
+            moDir.commit(epgconfig)
+
+            config = ConfigRequest()
+            bind = RsBd(fvAEPg, tnFvBDName=epg['bd']['name'])
+            config.addMo(bind)
+            print(f"Binding {epg['name']} to {epg['bd']['name']}")
+            moDir.commit(config)
