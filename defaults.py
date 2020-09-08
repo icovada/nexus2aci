@@ -1,3 +1,4 @@
+"Define standard objects"
 tenant = {'name': '',
           'description': '',
           'app': [],
