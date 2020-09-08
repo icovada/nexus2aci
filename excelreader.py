@@ -14,30 +14,9 @@ from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd
 from cobra.mit.request import ConfigRequest
 
 import acicreds
+import defaults
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-default_tenant = {'name': '',
-                  'description': '',
-                  'app': [],
-                  'bd': [],
-                  'vrf': [],
-                  'contract': [],
-                  'protocol_policy': {}}
-
-default_app = {'name': '',
-               'epg': []}
-
-default_epg = {'name': '',
-               'bd': '',
-               'contract': [],
-               'static_path': [],
-               'domain': []}
-
-default_bd = {'name': '',
-              'subnet': [],
-              'vrf': ''}
-
 
 excel = pd.read_excel("excelout.xlsx")
 
@@ -89,7 +68,7 @@ for tenant in clean_tenant_list:
                 thisbd = thisepg.loc[thisepg['BD'] == bd]
                 thisrow = thisbd.iloc[0]
                 vrf = thisrow['VRF-NEW']
-                bddict = deepcopy(default_bd)
+                bddict = deepcopy(defaults.bd)
                 vlanid = int(thisrow['Vlan ID'])
 
 
@@ -114,19 +93,19 @@ for tenant in clean_tenant_list:
                 bddict['subnet'].append(l3)
                 all_tenant_bd.append(bddict)
 
-            epgdict = deepcopy(default_epg)
+            epgdict = deepcopy(defaults.epg)
             epgdict.update({'name': epg,
                             'bd': bddict,
                             'old_vlan_tag': vlanid})
             all_app_epg.append(epgdict)
 
-            epgdict = deepcopy(default_epg)
+            epgdict = deepcopy(defaults.epg)
             epgdict.update({'name': epg,
                             'bd': clean_bd_list[0]})
 
         
 
-        appdict = deepcopy(default_app)
+        appdict = deepcopy(defaults.app)
         appdict.update({'name': app,
                         'epg': all_app_epg})
         allapp.append(appdict)
@@ -168,17 +147,14 @@ moDir = MoDirectory(loginSession)
 moDir.login()
 uniMo = moDir.lookupByDn('uni')
 
+tenantconfig = ConfigRequest()
 for tenant in alltenant:
-    tenantconfig = ConfigRequest()
     fvTenant = Tenant(uniMo, tenant['name'])
     tenantconfig.addMo(fvTenant)
-    print(f"Creating tenant {tenant['name']}")
-    moDir.commit(tenantconfig)
 
     for app in tenant['app']:
         fvApp = Ap(fvTenant, app['name'])
         tenantconfig.addMo(fvApp)
-        print(f"Creating APP {app['name']} in Tenant {tenant['name']}")
 
         for epg in app['epg']:
             fvAEPg = AEPg(fvApp, epg['name'])
@@ -186,9 +162,8 @@ for tenant in alltenant:
 
             fvBD = BD(fvTenant, epg['bd']['name'])
             tenantconfig.addMo(fvBD)
-            print(f"Creating EPG {epg['name']} and BD {epg['bd']['name']} in APP {app['name']}")
 
             bind = RsBd(fvAEPg, tnFvBDName=epg['bd']['name'])
             tenantconfig.addMo(bind)
-            print(f"Binding {epg['name']} to {epg['bd']['name']}")
-            moDir.commit(tenantconfig)
+
+moDir.commit(tenantconfig)
