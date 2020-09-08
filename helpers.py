@@ -12,7 +12,6 @@ def find_switch_profiles(moDir):
     
     for leafprof in leafswprofiles:
         leaves = []
-        value = leafprof
         leafselectors = moDir.lookupByClass("infraNodeBlk", 
                                             propFilter=f'wcard(infraNodeBlk.dn, "uni/infra/nprof-{leafprof.name}")')
         
@@ -21,7 +20,17 @@ def find_switch_profiles(moDir):
                 if i not in leaves:
                     leaves.append(i)
 
-        swprofiles[tuple(leaves)] = value
+
+        # Find interface selector for normal interfaces
+        # port channels are infraHPortS
+        intselectors = moDir.lookupByClass("infraRsAccPortP",
+                                           propFilter=f'wcard(infraRsAccPortP.dn, "uni/infra/nprof-{leafprof.name}")')
+        assert len(intselectors) == 1
+        for selector in intselectors:
+            realselector = moDir.lookupByDn(selector.tDn)
+
+        swprofiles[tuple(leaves)] = {"leafselector": leafprof,
+                                     "interfaceselector": realselector}
 
     return swprofiles
 
