@@ -6,6 +6,7 @@ from copy import deepcopy
 import pickle
 import csv
 import urllib3
+import re
 
 from cobra.mit.access import MoDirectory
 from cobra.mit.session import LoginSession
@@ -15,6 +16,8 @@ from cobra.mit.request import ConfigRequest
 
 import acicreds
 import defaults
+import helpers
+
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -29,7 +32,8 @@ with open("intnames.csv", "r") as csvfile:
         for interface in networkdata:
             try:
                 if interface['name'] == row['name']:
-                    interface['newname'] = row['newname']
+                    if row['newname'] != "":
+                        interface['newname'] = row['newname']
                     break
             except KeyError:
                 pass
@@ -113,7 +117,7 @@ for tenant in clean_tenant_list:
     vrf_list = thistenant['VRF-NEW'].unique().tolist()
     clean_vrf_list = [{'name': x} for x in vrf_list if str(x) != 'nan']
 
-    tenantdict = deepcopy(default_tenant)
+    tenantdict = deepcopy(defaults.tenant)
     tenantdict.update({'name': tenant,
                        'app': allapp,
                        'bd': all_tenant_bd,
@@ -124,6 +128,10 @@ for tenant in alltenant:
     for application in tenant['app']:
         for epg in application['epg']:
             for interface in networkdata:
+                if "newname" not in interface:
+                    # Do not lookup non-migrated interfaces
+                    continue
+
                 if "ismember" in interface:
                     continue
                 try:
