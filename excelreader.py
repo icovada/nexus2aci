@@ -13,6 +13,8 @@ from cobra.mit.session import LoginSession
 from cobra.mit.request import DnQuery
 from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd
 from cobra.mit.request import ConfigRequest
+from cobra.model.infra import AccBndlGrp
+
 
 import acicreds
 import defaults
@@ -175,3 +177,27 @@ for tenant in alltenant:
             tenantconfig.addMo(bind)
 
 moDir.commit(tenantconfig)
+
+
+# Create port-channels and vpc
+# add object in interface dict
+bundleparent = moDir.lookupByDn('uni/infra/funcprof')
+config = ConfigRequest()
+for interface in networkdata:
+    try:
+        if "ismember" == True:
+            continue
+
+        if "port-channel" in interface['name']:
+            lagT = "link"
+        elif "vpc" in interface['name']:
+            lagT = "node"
+        else:
+            continue
+
+        bundle = AccBndlGrp(bundleparent, interface['newname'], lagT=lagT)
+        config.addMo(bundle)
+    except KeyError:
+        pass
+
+moDir.commit(config)
