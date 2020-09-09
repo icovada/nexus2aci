@@ -16,7 +16,7 @@ from cobra.mit.request import ConfigRequest
 
 import acicreds
 import defaults
-import helpers
+import helpers.generic
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
