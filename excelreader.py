@@ -13,11 +13,12 @@ from cobra.mit.session import LoginSession
 from cobra.mit.request import DnQuery
 from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd
 from cobra.mit.request import ConfigRequest
-from cobra.model.infra import AccBndlGrp
+from cobra.model.infra import AccBndlGrp, RsLacpPol
 
 
 import acicreds
 import defaults
+import policymappings
 import helpers.generic
 
 
@@ -77,7 +78,6 @@ for tenant in clean_tenant_list:
                 bddict = deepcopy(defaults.bd)
                 vlanid = int(thisrow['Vlan ID'])
 
-
                 bddict.update({'name': bd,
                                'vrf': vrf})
 
@@ -88,7 +88,8 @@ for tenant in clean_tenant_list:
                         try:
                             assert netmask[i] >= netmask[i+1]
                         except AssertionError:
-                            raise AssertionError(f"Invalid subnet format {thisrow['netmask']}")
+                            raise AssertionError(
+                                f"Invalid subnet format {thisrow['netmask']}")
 
                     # Black magic from https://stackoverflow.com/questions/38085571/how-use-netaddr-to-convert-subnet-mask-to-cidr-in-python
                     cidr = sum(bin(int(x)).count('1') for x in netmask)
@@ -108,8 +109,6 @@ for tenant in clean_tenant_list:
             epgdict = deepcopy(defaults.epg)
             epgdict.update({'name': epg,
                             'bd': clean_bd_list[0]})
-
-        
 
         appdict = deepcopy(defaults.app)
         appdict.update({'name': app,
@@ -185,19 +184,30 @@ bundleparent = moDir.lookupByDn('uni/infra/funcprof')
 config = ConfigRequest()
 for interface in networkdata:
     try:
-        if "ismember" == True:
+        if interface["ismember"] == True:
             continue
-
-        if "port-channel" in interface['name']:
-            lagT = "link"
-        elif "vpc" in interface['name']:
-            lagT = "node"
-        else:
-            continue
-
-        bundle = AccBndlGrp(bundleparent, interface['newname'], lagT=lagT)
-        config.addMo(bundle)
     except KeyError:
         pass
+
+    if "port-channel" in interface['name']:
+        lagT = "link"
+    elif "vpc" in interface['name']:
+        lagT = "node"
+    else:
+        continue
+
+    try:
+        bundle = AccBndlGrp(bundleparent, interface['newname'], lagT=lagT)
+    except KeyError:
+        pass
+    config.addMo(bundle)
+
+    try:
+        lacp = policymappings.lacp_modes[interface['protocol']]
+    except KeyError:
+        lacp = ""
+    print(lacp)
+    lacp_pol = RsLacpPol(bundle, tnLacpLagPolName=lacp)
+    config.addMo(bundle)
 
 moDir.commit(config)
