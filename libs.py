@@ -127,6 +127,14 @@ def parse_switched_interface(interfaces, l2dict=None):
             description = line.re_match(r"description (.*)$")
             thisint.update({"description": description})
 
+        # Ignore non-l2 ports
+        is_l3 = True
+        for line in eth.re_search_children("switchport"):
+            is_l3 = False
+        
+        if is_l3:
+            continue
+
         # ignore ports connected to a fex
         is_fex = False
         for line in eth.re_search_children("switchport mode"):
