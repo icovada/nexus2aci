@@ -2,7 +2,7 @@ from cobra.mit.request import DnQuery
 import re
 from defaults import UNSAFE_CHARACTER_REPLACE
 
-def findchildren(mo, moDir, filter=None):
+def find_children(mo, moDir, filter=None):
     dnQuery = DnQuery(mo.dn)
     dnQuery.queryTarget = "children"
     children =  moDir.query(dnQuery)
