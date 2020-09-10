@@ -20,6 +20,7 @@ import acicreds
 import defaults
 import policymappings
 import helpers.generic
+import helpers.bundle
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -189,34 +190,12 @@ for interface in networkdata:
     except KeyError:
         pass
 
-    if "port-channel" in interface['name']:
-        lagT = "link"
-    elif "vpc" in interface['name']:
-        lagT = "node"
-    else:
+    if "newname" not in interface:
         continue
 
-    try:
-        bundle = AccBndlGrp(bundleparent, interface['newname'], lagT=lagT)
+    if any([x in interface['name'] for x in ["port-channel", "vpc"]]):
+        bundle, lacp_pol = helpers.bundle.create_bundle_interface(interface, bundleparent)
         config.addMo(bundle)
-    except KeyError:
-        continue
-
-    try:
-        assert interface['protocol'] in policymappings.lacp_modes
-        lacp = interface['protocol']
-    except KeyError:
-        # protocol not in interface
-        lacp = "on"
-    except AssertionError:
-        # protocol value not in lacp_modes
-        raise AssertionError("Unknown protocol value " + str(interface['protocol']) + ", set it in policymappings.lacp_modes")
-    finally:
-        lacp = policymappings.lacp_modes.get(lacp)
-
-    lacp_pol = RsLacpPol(bundle, tnLacpLagPolName=lacp)
-    print(lacp)
-    print(interface['newname'])
-    config.addMo(lacp_pol)
+        config.addMo(lacp_pol)
 
 moDir.commit(config)
