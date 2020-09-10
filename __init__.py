@@ -18,6 +18,9 @@ consolidate_interfaces(flat, "vpc")
 # Export interface names for renaming
 allintdata = []
 for i in flat:
+    if "port-channel" in i['name']:
+        if 'ismember' in i:
+            continue
     thisint = {"newname": ""}
     thisint.update({"name": i.get("name", "")})
     thisint.update({"description": i.get("description", "")})
@@ -28,7 +31,6 @@ for i in flat:
 with open("intnames.csv", "w") as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=["name", "description", "newname"])
     writer.writeheader()
-    #for i in allintdata:
     writer.writerows(allintdata)
 
 
