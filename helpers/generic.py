@@ -2,14 +2,19 @@ from cobra.mit.request import DnQuery
 import re
 from defaults import UNSAFE_CHARACTER_REPLACE
 
-def find_children(mo, moDir, filter=None):
+def find_children(mo, moDir):
     dnQuery = DnQuery(mo.dn)
     dnQuery.queryTarget = "children"
     children =  moDir.query(dnQuery)
-    if filter is not None:
-        return [x for x in children if x.meta.moClassName == filter]
-    else:
-        return children
+    childdict = {}
+    for i in children:
+        try:
+            childdict[i.meta.moClassName].append(i)
+        except KeyError:
+            childdict[i.meta.moClassName] = []
+            childdict[i.meta.moClassName].append(i)
+
+    return childdict
 
 
 
@@ -34,14 +39,15 @@ def find_switch_profiles(moDir):
                                        propFilter=f'wcard(infraRsAccPortP.dn, "uni/infra/nprof-{leafprof.name}")')
     assert len(intprofile) == 1
     leafintprofile = moDir.lookupByDn(intprofile[0].tDn)
-    accportselector = find_children(leafintprofile, moDir, "infraHPortS")
+    accportselector = find_children(leafintprofile, moDir)["infraHPortS"]
         
     # Find list of port selectors and relative Policy Groups
     # so we can add interfaces to existing groups
     portselectors = {}
     for selector in accportselector:
-        accaccgroup = find_children(selector, moDir, "infraRsAccBaseGrp")[0].tDn
-        accportblock = find_children(selector, moDir, "infraPortBlk")
+        selectorchildren = find_children(selector, moDir)
+        accaccgroup = selectorchildren["infraRsAccBaseGrp"][0].tDn
+        accportblock = selectorchildren["infraPortBlk"]
         portrange = []
         for block in accportblock:
             # Not going to bother with these
