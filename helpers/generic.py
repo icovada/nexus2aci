@@ -45,19 +45,11 @@ def find_switch_profiles(moDir):
     # so we can add interfaces to existing groups
     portselectors = {}
     for selector in accportselector:
-        selectorchildren = find_children(selector, moDir)
-        accaccgroup = selectorchildren["infraRsAccBaseGrp"][0].tDn
-        accportblock = selectorchildren["infraPortBlk"]
-        portrange = []
-        for block in accportblock:
-            # Not going to bother with these
-            assert block.fromCard == block.toCard
-
-            for i in range(int(block.fromPort), int(block.toPort)+1):
-                if i not in portrange:
-                    portrange.append(i)
-
-        portselectors[accaccgroup] = selector
+        try:
+            selectorchildren = find_children(selector, moDir)["infraRsAccBaseGrp"][0].tDn
+            portselectors[selectorchildren] = selector
+        except KeyError:
+            continue
 
 
     swprofiles[tuple(leaves)] = portselectors
