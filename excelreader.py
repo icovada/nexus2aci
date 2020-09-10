@@ -211,9 +211,18 @@ for interface in networkdata:
             raise AssertionError("Wrong interface name " + interface['newname'] + ", format 100/1/1")
 
         leaf = (int(path[0]),)
-        # TODO: If no interface selector, raise error and create it
         int_selector = defaults.xlate_policy_group_bundle_int_selector_name(defaults.POLICY_GROUP_ACCESS)
-        interfaceselector = switch_profiles[leaf][defaults.POLICY_GROUP_ACCESS]
+        try:
+            assert leaf in switch_profiles
+        except AssertionError:
+            # TODO: Create leaf_profile and interface selector profile
+            pass
+        
+        try:
+            interfaceselector = switch_profiles[leaf][defaults.POLICY_GROUP_ACCESS]
+        except KeyError:
+            # TODO: Create leaf interface profile
+            pass
         port_block = helpers.int.create_port_block(interface, interfaceselector)
         config.addMo(port_block)
 
