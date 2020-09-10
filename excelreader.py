@@ -203,11 +203,20 @@ for interface in networkdata:
         continue
 
     try:
-        lacp = policymappings.lacp_modes.get(interface['protocol'], "")
+        assert interface['protocol'] in policymappings.lacp_modes
+        lacp = interface['protocol']
     except KeyError:
-        lacp = ""
+        # protocol not in interface
+        lacp = "on"
+    except AssertionError:
+        # protocol value not in lacp_modes
+        raise AssertionError("Unknown protocol value " + str(interface['protocol']) + ", set it in policymappings.lacp_modes")
+    finally:
+        lacp = policymappings.lacp_modes.get(lacp)
 
     lacp_pol = RsLacpPol(bundle, tnLacpLagPolName=lacp)
+    print(lacp)
+    print(interface['newname'])
     config.addMo(lacp_pol)
 
 moDir.commit(config)
