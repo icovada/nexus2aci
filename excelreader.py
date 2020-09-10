@@ -197,5 +197,6 @@ for interface in networkdata:
         bundle, lacp_pol = helpers.bundle.create_bundle_interface(interface, bundleparent)
         config.addMo(bundle)
         config.addMo(lacp_pol)
+        interface['AccBndlGrp'] = bundle
 
 moDir.commit(config)
