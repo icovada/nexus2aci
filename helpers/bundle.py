@@ -1,4 +1,4 @@
-from cobra.model.infra import AccBndlGrp
+from cobra.model.infra import AccBndlGrp, PortBlk
 from cobra.mit.request import ConfigRequest
 
 def create_bundle_interface(name, moDir, vpc=False, *args, **kwargs):
@@ -10,3 +10,16 @@ def create_bundle_interface(name, moDir, vpc=False, *args, **kwargs):
     tenantconfig = ConfigRequest()
     tenantconfig.addMo(bundle)
     moDir.commit(tenantconfig)
+
+
+def create_port_block(name, portselector, description, fromPort, toPort=None):
+    if toPort is None:
+        toPort = fromPort
+
+    block = PortBlk(portselector, 
+                    name,
+                    descr=description, 
+                    fromPort=fromPort,
+                    toPort=toPort)
+
+    return block
