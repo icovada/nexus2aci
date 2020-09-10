@@ -20,7 +20,7 @@ import acicreds
 import defaults
 import policymappings
 import helpers.generic
-import helpers.bundle
+import helpers.int
 
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -194,7 +194,7 @@ for interface in networkdata:
         continue
 
     if any([x in interface['name'] for x in ["port-channel", "vpc"]]):
-        bundle, lacp_pol = helpers.bundle.create_bundle_interface(interface, bundleparent)
+        bundle, lacp_pol = helpers.int.create_bundle_interface(interface, bundleparent)
         config.addMo(bundle)
         config.addMo(lacp_pol)
         interface['AccBndlGrp'] = bundle
