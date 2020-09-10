@@ -30,14 +30,32 @@ def find_switch_profiles(moDir):
 
         # Find interface selector for normal interfaces
         # port channels are infraHPortS
-        intselectors = moDir.lookupByClass("infraRsAccPortP",
+        intprofile = moDir.lookupByClass("infraRsAccPortP",
                                            propFilter=f'wcard(infraRsAccPortP.dn, "uni/infra/nprof-{leafprof.name}")')
-        assert len(intselectors) == 1
-        for selector in intselectors:
-            realselector = moDir.lookupByDn(selector.tDn)
+        assert len(intprofile) == 1
+        leafintprofile = moDir.lookupByDn(intprofile[0].tDn)
+        accportselector = find_children(leafintprofile, moDir, "infraHPortS")
+        
+        # Find list of port selectors and relative Policy Groups
+        # so we can add interfaces to existing groups
+        portselectors = {}
+        for selector in accportselector:
+            accaccgroup = find_children(selector, moDir, "infraRsAccBaseGrp")[0].tDn
+            accportblock = find_children(selector, moDir, "infraPortBlk")
+            portrange = []
+            for block in accportblock:
+                # Not going to bother with these
+                assert block.fromCard == block.toCard
+
+                for i in range(int(block.fromPort), int(block.toPort)+1):
+                    if i not in portrange:
+                        portrange.append(i)
+
+            portselectors[accaccgroup] = selector
+
 
         swprofiles[tuple(leaves)] = {"leafselector": leafprof,
-                                     "interfaceselector": realselector}
+                                     "interfaceselector": portselectors}
 
     return swprofiles
 
