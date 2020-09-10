@@ -57,6 +57,11 @@ def find_switch_profiles(moDir):
         swprofiles[tuple(leaves)] = {"leafselector": leafprof,
                                      "interfaceselector": portselectors}
 
+    # Sample return data:
+    # {(101,): {'leafselector': <cobra.modelimpl.infra.nodep.NodeP object at 0x7f03d19ff490>, 
+    #           'interfaceselector': {'uni/infra/funcprof/accportgrp-1G': <cobra.modelimpl.infra.hports.HPortS object at 0x7f03d1a58fd0>, 
+    #                                 'uni/infra/funcprof/accportgrp-accessantani': <cobra.modelimpl.infra.hports.HPortS object at 0x7f03d19f33a0>, 
+    #                                 'uni/infra/funcprof/accbundle-porc-ciannel': <cobra.modelimpl.infra.hports.HPortS object at 0x7f03d1a14d60>}}}
     return swprofiles
 
 
