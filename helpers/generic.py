@@ -2,10 +2,15 @@ from cobra.mit.request import DnQuery
 import re
 from defaults import UNSAFE_CHARACTER_REPLACE
 
-def findchildren(mo, moDir):
+def findchildren(mo, moDir, filter=None):
     dnQuery = DnQuery(mo.dn)
     dnQuery.queryTarget = "children"
-    return moDir.query(dnQuery)
+    children =  moDir.query(dnQuery)
+    if filter is not None:
+        return [x for x in children if x.meta.moClassName == filter]
+    else:
+        return children
+
 
 
 def find_switch_profiles(moDir):
