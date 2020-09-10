@@ -7,9 +7,7 @@ def create_bundle_interface(name, moDir, vpc=False, *args, **kwargs):
     if vpc is True:
         bundle.lagT = "node"
 
-    tenantconfig = ConfigRequest()
-    tenantconfig.addMo(bundle)
-    moDir.commit(tenantconfig)
+    return bundle
 
 
 def create_port_block(name, portselector, description, fromPort, toPort=None):
