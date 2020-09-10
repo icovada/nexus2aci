@@ -179,6 +179,8 @@ for tenant in alltenant:
 moDir.commit(tenantconfig)
 
 
+switch_profiles = helpers.generic.find_switch_profiles(moDir)
+
 # Create port-channels and vpc
 # add object in interface dict
 bundleparent = moDir.lookupByDn('uni/infra/funcprof')
@@ -198,5 +200,21 @@ for interface in networkdata:
         config.addMo(bundle)
         config.addMo(lacp_pol)
         interface['AccBndlGrp'] = bundle
+
+    if "Ethernet" in interface['name']:
+        try:
+            path = interface['newname'].split("/")
+            assert len(path) == 3
+        except KeyError:
+            continue
+        except AssertionError:
+            raise AssertionError("Wrong interface name " + interface['newname'] + ", format 100/1/1")
+
+        leaf = (int(path[0]),)
+        # TODO: If no interface selector, raise error and create it
+        int_selector = defaults.xlate_policy_group_bundle_int_selector_name(defaults.POLICY_GROUP_ACCESS)
+        interfaceselector = switch_profiles[leaf][defaults.POLICY_GROUP_ACCESS]
+        port_block = helpers.int.create_port_block(interface, interfaceselector)
+        config.addMo(port_block)
 
 moDir.commit(config)

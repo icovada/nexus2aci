@@ -29,14 +29,13 @@ def create_bundle_interface(interface, parent, *args, **kwargs):
     return bundle, lacp_pol
 
 
-def create_port_block(name, portselector, description, fromPort, toPort=None):
-    if toPort is None:
-        toPort = fromPort
+def create_port_block(interface, portselector):
+    path = interface['newname'].split("/")
 
     block = PortBlk(portselector, 
-                    name,
-                    descr=description, 
-                    fromPort=fromPort,
-                    toPort=toPort)
+                    f"ethernet_{path[2]}",
+                    descr=interface.get("description", ""), 
+                    fromPort=int(path[2]),
+                    toPort=int(path[2]))
 
     return block
