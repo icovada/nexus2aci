@@ -198,16 +198,16 @@ for interface in networkdata:
 
     try:
         bundle = AccBndlGrp(bundleparent, interface['newname'], lagT=lagT)
+        config.addMo(bundle)
     except KeyError:
-        pass
-    config.addMo(bundle)
+        continue
 
     try:
-        lacp = policymappings.lacp_modes[interface['protocol']]
+        lacp = policymappings.lacp_modes.get(interface['protocol'], "")
     except KeyError:
         lacp = ""
-    print(lacp)
+
     lacp_pol = RsLacpPol(bundle, tnLacpLagPolName=lacp)
-    config.addMo(bundle)
+    config.addMo(lacp_pol)
 
 moDir.commit(config)
