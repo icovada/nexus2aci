@@ -23,22 +23,22 @@ bd = {'name': '',
 
 
 def INTERFACE_SELECTOR_ACCESS(name):
-       return f"access_{name}_IntSel"
+    return f"access_{name}_IntSel"
 
 def INTERFACE_SELECTOR_BUNDLE(bundlemode, name):
-       return f"{bundlemode}_GDC_{name}_IntSel"
+    return f"{bundlemode}_GDC_{name}_IntSel"
 
 def INTERFACE_SELECTOR_PROFILE(leaves):
-       return f"Leaf-{'-'.join([str(x) for x in leaves])}_IntProf"
+    return f"Leaf-{'-'.join([str(x) for x in leaves])}_IntProf"
 
 def LEAF_PROFILE(leaves):
-       return f"Leaf-{'-'.join([str(x) for x in leaves])}_LeafProf"
+    return f"Leaf-{'-'.join([str(x) for x in leaves])}_LeafProf"
 
 def LEAF_SELECTOR(leaves):
-       return f"Leaf-{'-'.join([str(x) for x in leaves])}_SwSel"
+    return f"Leaf-{'-'.join([str(x) for x in leaves])}_SwSel"
 
 def POLICY_GROUP_BUNDLE(bundlemode, name):
-       return f"{bundlemode}_GDC_{name}_PolGrp"
+    return f"{bundlemode}_GDC_{name}_PolGrp"
 
 POLICY_GROUP_ACCESS = f"access_SRV_1G-auto_PolGrp"
 UNSAFE_CHARACTER_REPLACE = {"&": "_e_",
