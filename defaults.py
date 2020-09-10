@@ -19,3 +19,6 @@ epg = {'name': '',
 bd = {'name': '',
       'subnet': [],
       'vrf': ''}
+
+
+UNSAFE_CHARACTER_REPLACE = {"&": "_e_",}

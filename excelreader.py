@@ -78,7 +78,7 @@ for tenant in clean_tenant_list:
                 bddict = deepcopy(defaults.bd)
                 vlanid = int(thisrow['Vlan ID'])
 
-                bddict.update({'name': bd,
+                bddict.update({'name': helpers.generic.safe_string(bd),
                                'vrf': vrf})
 
                 if isinstance(thisrow['netmask'], str):
@@ -101,17 +101,17 @@ for tenant in clean_tenant_list:
                 all_tenant_bd.append(bddict)
 
             epgdict = deepcopy(defaults.epg)
-            epgdict.update({'name': epg,
+            epgdict.update({'name': helpers.generic.safe_string(epg),
                             'bd': bddict,
                             'old_vlan_tag': vlanid})
             all_app_epg.append(epgdict)
 
             epgdict = deepcopy(defaults.epg)
-            epgdict.update({'name': epg,
+            epgdict.update({'name': helpers.generic.safe_string(epg),
                             'bd': clean_bd_list[0]})
 
         appdict = deepcopy(defaults.app)
-        appdict.update({'name': app,
+        appdict.update({'name': helpers.generic.safe_string(app),
                         'epg': all_app_epg})
         allapp.append(appdict)
 
@@ -119,7 +119,7 @@ for tenant in clean_tenant_list:
     clean_vrf_list = [{'name': x} for x in vrf_list if str(x) != 'nan']
 
     tenantdict = deepcopy(defaults.tenant)
-    tenantdict.update({'name': tenant,
+    tenantdict.update({'name': helpers.generic.safe_string(tenant),
                        'app': allapp,
                        'bd': all_tenant_bd,
                        'vrf': clean_vrf_list})
