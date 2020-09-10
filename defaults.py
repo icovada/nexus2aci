@@ -43,3 +43,7 @@ def POLICY_GROUP_BUNDLE(bundlemode, name):
 POLICY_GROUP_ACCESS = f"access_SRV_1G-auto_PolGrp"
 UNSAFE_CHARACTER_REPLACE = {"&": "_e_",
                             " ": "_"}
+
+def xlate_policy_group_bundle_int_selector_name(polgroup):
+    intselname = polgroup.replace("PolGrp", "IntSel")
+    return intselname
