@@ -2,7 +2,7 @@ from cobra.model.infra import AccBndlGrp, PortBlk, RsLacpPol
 from cobra.mit.request import ConfigRequest
 import policymappings
 
-def create_bundle_interface(interface, parent, *args, **kwargs):
+def create_bundle_interface_polgrp(interface, parent, *args, **kwargs):
     if "port-channel" in interface['name']:
         lagT = "link"
     elif "vpc" in interface['name']:
