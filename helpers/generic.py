@@ -33,26 +33,26 @@ def find_switch_profiles(moDir):
                     leaves.append(i)
 
 
-    # Find interface selector for normal interfaces
-    # port channels are infraHPortS
-    intprofile = moDir.lookupByClass("infraRsAccPortP",
-                                       propFilter=f'wcard(infraRsAccPortP.dn, "uni/infra/nprof-{leafprof.name}")')
-    assert len(intprofile) == 1
-    leafintprofile = moDir.lookupByDn(intprofile[0].tDn)
-    accportselector = find_children(leafintprofile, moDir).get("infraHPortS", [])
+        # Find interface selector for normal interfaces
+        # port channels are infraHPortS
+        intprofile = moDir.lookupByClass("infraRsAccPortP",
+                                         propFilter=f'wcard(infraRsAccPortP.dn, "uni/infra/nprof-{leafprof.name}")')
+        assert len(intprofile) == 1
+        leafintprofile = moDir.lookupByDn(intprofile[0].tDn)
+        accportselector = find_children(leafintprofile, moDir).get("infraHPortS", [])
         
-    # Find list of port selectors and relative Policy Groups
-    # so we can add interfaces to existing groups
-    portselectors = {}
-    for selector in accportselector:
-        try:
-            selectorchildren = find_children(selector, moDir)["infraRsAccBaseGrp"][0].tDn[30:]
-            portselectors[selectorchildren] = selector
-        except KeyError:
-            continue
+        # Find list of port selectors and relative Policy Groups
+        # so we can add interfaces to existing groups
+        portselectors = {}
+        for selector in accportselector:
+            try:
+                selectorchildren = find_children(selector, moDir)["infraRsAccBaseGrp"][0].tDn[30:]
+                portselectors[selectorchildren] = selector
+            except KeyError:
+                continue
 
 
-    swprofiles[tuple(leaves)] = {"leafintprofile": leafintprofile,
+        swprofiles[tuple(leaves)] = {"leafintprofile": leafintprofile,
                                  "portselectors": portselectors}
 
     # Sample return data:
