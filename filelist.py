@@ -1,7 +1,7 @@
 # parse configs for access and distribution switches
 # you should theoretically add all switches in the DC
 
-entiredc = {'agg': ['config/AGGSNANGDC-1.nxos', 'config/AGGSNANGDC-1.nxos'],
+entiredc = {'agg': ['config/AGGSNANGDC-1.nxos', 'config/AGGSNANGDC-2.nxos'],
             'aggp': ['config/AGGSNANGDCP-1.nxos', 'config/AGGSNANGDCP-2.nxos'],
             'core': ['config/CORESNANGDC-1.nxos', 'config/CORESNANGDC-2.nxos'],
             'H1-2': ['config/SWISNA-NGDC5K-H1.nxos', 'config/SWISNA-NGDC5K-H2.nxos'],
