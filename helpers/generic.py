@@ -39,7 +39,7 @@ def find_switch_profiles(moDir):
                                        propFilter=f'wcard(infraRsAccPortP.dn, "uni/infra/nprof-{leafprof.name}")')
     assert len(intprofile) == 1
     leafintprofile = moDir.lookupByDn(intprofile[0].tDn)
-    accportselector = find_children(leafintprofile, moDir)["infraHPortS"]
+    accportselector = find_children(leafintprofile, moDir).get("infraHPortS", [])
         
     # Find list of port selectors and relative Policy Groups
     # so we can add interfaces to existing groups
@@ -52,7 +52,7 @@ def find_switch_profiles(moDir):
             continue
 
 
-    swprofiles[tuple(leaves)] = {"intprofile": intprofile,
+    swprofiles[tuple(leaves)] = {"leafintprofile": leafintprofile,
                                  "portselectors": portselectors}
 
     # Sample return data:
@@ -69,4 +69,4 @@ def safe_string(string):
         safe_char = UNSAFE_CHARACTER_REPLACE.get(i, "")
         string = string.replace(i, safe_char)
 
-    return string
+    return string    
