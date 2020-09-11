@@ -1,16 +1,11 @@
 import pandas as pd
-import numpy as np
-import yaml
-import math
 from copy import deepcopy
 import pickle
 import csv
 import urllib3
-import re
 
 from cobra.mit.access import MoDirectory
 from cobra.mit.session import LoginSession
-from cobra.mit.request import DnQuery
 from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd
 from cobra.mit.request import ConfigRequest
 from cobra.model.infra import AccBndlGrp, RsLacpPol
