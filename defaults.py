@@ -45,5 +45,8 @@ UNSAFE_CHARACTER_REPLACE = {"&": "_e_",
                             " ": "_"}
 
 def xlate_policy_group_bundle_int_selector_name(polgroup):
-    intselname = polgroup.replace("PolGrp", "IntSel")
+    if "PolGrp" in polgroup:
+        intselname = polgroup.replace("PolGrp", "IntSel")
+    else:
+        intselname = intselname + "_IntSel"
     return intselname
