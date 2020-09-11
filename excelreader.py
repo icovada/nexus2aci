@@ -191,10 +191,52 @@ for interface in networkdata:
         continue
 
     if any([x in interface['name'] for x in ["port-channel", "vpc"]]):
+        # TODO: Check if it already exists
         bundle, lacp_pol = helpers.int.create_bundle_interface_polgrp(interface, bundleparent)
         config.addMo(bundle)
         config.addMo(lacp_pol)
-        interface['AccBndlGrp'] = bundle
+
+        # Add members in policy group
+        if "port-channel" in interface['name']:
+            membernames = [x['name'] for x in interface['members']]
+        else:
+            membernames = []
+            for intf in interface['members']:
+                membernames = membernames + intf['members']
+
+        int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface['newname'])
+        for intf in membernames:
+            if "newname" in intf:
+                try:
+                    path = intf['newname'].split("/")
+                    assert len(path) == 3
+                except KeyError:
+                    continue
+                except AssertionError:
+                    raise AssertionError("Wrong interface name " + intf['newname'] + ", format 100/1/1")
+                leaf = (int(path[0]),)
+                int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface['newname'])
+                try:
+                    assert leaf in switch_profiles
+                except AssertionError:
+                    # TODO: Create leaf_profile and interface selector profile
+                    raise AssertionError("No leaf profile for this interface")
+
+                try:
+                    interfaceselector = switch_profiles[leaf]['portselectors'][interface['newname']]
+                except KeyError:
+                    # Create port selector
+                    interfaceselector = HPortS(switch_profiles[leaf]['leafintprofile'], int_selector_name, "range")
+                    switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
+                    config.addMo(interfaceselector)
+
+                    accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface['newname'])
+                    config.addMo(interfaceselector)
+                    config.addMo(accbasegrp)
+
+                port_block = helpers.int.create_port_block(intf, interfaceselector)
+                config.addMo(port_block)
+        
 
     if "Ethernet" in interface['name']:
         try:
@@ -206,7 +248,7 @@ for interface in networkdata:
             raise AssertionError("Wrong interface name " + interface['newname'] + ", format 100/1/1")
 
         leaf = (int(path[0]),)
-        int_selector = defaults.xlate_policy_group_bundle_int_selector_name(defaults.POLICY_GROUP_ACCESS)
+        int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(defaults.POLICY_GROUP_ACCESS)
         try:
             assert leaf in switch_profiles
         except AssertionError:
@@ -217,12 +259,13 @@ for interface in networkdata:
             interfaceselector = switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS]
         except KeyError:
             # Create port selector
-            interfaceselector = HPortS(switch_profiles[leaf]['leafintprofile'], int_selector, "range")
+            interfaceselector = HPortS(switch_profiles[leaf]['leafintprofile'], int_selector_name, "range")
             switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
             config.addMo(interfaceselector)
 
             # Assign policy group to port selector
             accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accportgrp-" + defaults.POLICY_GROUP_ACCESS)
+            config.addMo(interfaceselector)
             config.addMo(accbasegrp)
 
 
