@@ -48,5 +48,5 @@ def xlate_policy_group_bundle_int_selector_name(polgroup):
     if "PolGrp" in polgroup:
         intselname = polgroup.replace("PolGrp", "IntSel")
     else:
-        intselname = intselname + "_IntSel"
+        intselname = polgroup + "_IntSel"
     return intselname
