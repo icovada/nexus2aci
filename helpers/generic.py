@@ -52,12 +52,14 @@ def find_switch_profiles(moDir):
             continue
 
 
-    swprofiles[tuple(leaves)] = portselectors
+    swprofiles[tuple(leaves)] = {"intprofile": intprofile,
+                                 "portselectors": portselectors}
 
     # Sample return data:
-    # {(101,): {'uni/infra/funcprof/accportgrp-1G': <cobra.modelimpl.infra.hports.HPortS object at 0x7f03d1a58fd0>, 
-    #           'uni/infra/funcprof/accportgrp-accessantani': <cobra.modelimpl.infra.hports.HPortS object at 0x7f03d19f33a0>, 
-    #           'uni/infra/funcprof/accbundle-porc-ciannel': <cobra.modelimpl.infra.hports.HPortS object at 0x7f03d1a14d60>}}}
+    # {(101,): {"intprofile": <cobra.modelimpl.infra.AccPortP>,
+    #           "portselectors": {'uni/infra/funcprof/accportgrp-1G': <cobra.modelimpl.infra.hports.HPortS object at 0x7f03d1a58fd0>, 
+    #                             'uni/infra/funcprof/accportgrp-accessantani': <cobra.modelimpl.infra.hports.HPortS object at 0x7f03d19f33a0>, 
+    #                             'uni/infra/funcprof/accbundle-porc-ciannel': <cobra.modelimpl.infra.hports.HPortS object at 0x7f03d1a14d60>}}}
     return swprofiles
 
 

@@ -214,7 +214,7 @@ for interface in networkdata:
             pass
         
         try:
-            interfaceselector = switch_profiles[leaf][defaults.POLICY_GROUP_ACCESS]
+            interfaceselector = switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS]
         except KeyError:
             # TODO: Create leaf interface profile
             pass
