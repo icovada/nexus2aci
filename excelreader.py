@@ -8,7 +8,7 @@ from cobra.mit.access import MoDirectory
 from cobra.mit.session import LoginSession
 from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd
 from cobra.mit.request import ConfigRequest
-from cobra.model.infra import AccBndlGrp, RsLacpPol
+from cobra.model.infra import AccBndlGrp, RsLacpPol, HPortS, RsAccBaseGrp
 
 
 import acicreds
@@ -211,13 +211,21 @@ for interface in networkdata:
             assert leaf in switch_profiles
         except AssertionError:
             # TODO: Create leaf_profile and interface selector profile
-            pass
+            raise AssertionError("No leaf profile for this interface")
         
         try:
             interfaceselector = switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS]
         except KeyError:
-            # TODO: Create leaf interface profile
-            pass
+            # Create port selector
+            interfaceselector = HPortS(switch_profiles[leaf]['leafintprofile'], defaults.POLICY_GROUP_ACCESS, "range")
+            switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
+            config.addMo(interfaceselector)
+
+            # Assign policy group to port selector
+            accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accportgrp-" + defaults.POLICY_GROUP_ACCESS)
+            config.addMo(accbasegrp)
+
+
         port_block = helpers.int.create_port_block(interface, interfaceselector)
         config.addMo(port_block)
 
