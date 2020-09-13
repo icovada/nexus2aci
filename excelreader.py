@@ -198,7 +198,7 @@ for interface in networkdata:
 
         # Add members in policy group
         if "port-channel" in interface['name']:
-            membernames = [x['name'] for x in interface['members']]
+            membernames = [x for x in interface['members']]
         else:
             membernames = []
             for intf in interface['members']:
