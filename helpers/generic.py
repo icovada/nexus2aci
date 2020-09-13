@@ -46,8 +46,10 @@ def find_switch_profiles(moDir):
         portselectors = {}
         for selector in accportselector:
             try:
-                selectorchildren = find_children(selector, moDir)["infraRsAccBaseGrp"][0].tDn[30:]
-                portselectors[selectorchildren] = selector
+                dn = find_children(selector, moDir)["infraRsAccBaseGrp"][0].tDn.replace("uni/infra/funcprof/","")
+                dashposition = dn.find("-")
+                accgrpname = dn[dashposition+1:]
+                portselectors[accgrpname] = selector
             except KeyError:
                 continue
 
