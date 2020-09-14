@@ -155,17 +155,21 @@ uniMo = moDir.lookupByDn('uni')
 tenantconfig = ConfigRequest()
 for tenant in alltenant:
     fvTenant = Tenant(uniMo, tenant['name'])
+    tenant["aciobject"] = fvTenant
     tenantconfig.addMo(fvTenant)
 
     for app in tenant['app']:
         fvApp = Ap(fvTenant, app['name'])
+        app["aciobject"] = fvApp
         tenantconfig.addMo(fvApp)
 
         for epg in app['epg']:
             fvAEPg = AEPg(fvApp, epg['name'])
+            epg["aciobject"] = fvAEPg
             tenantconfig.addMo(fvAEPg)
 
             fvBD = BD(fvTenant, epg['bd']['name'])
+            epg['bd']['aciobject'] = fvBD
             tenantconfig.addMo(fvBD)
 
             bind = RsBd(fvAEPg, tnFvBDName=epg['bd']['name'])
