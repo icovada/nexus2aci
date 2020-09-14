@@ -64,6 +64,23 @@ def find_switch_profiles(moDir):
     #                             'uni/infra/funcprof/accbundle-porc-ciannel': <cobra.modelimpl.infra.hports.HPortS object at 0x7f03d1a14d60>}}}
     return swprofiles
 
+def find_path_endpoints(moDir):
+    path_endpoints = {}
+    single_path = moDir.lookupByClass("fabricPathEpCont")
+
+    for path in single_path:
+        node = int(path.nodeId)
+        path_endpoints[(node,)] = path
+
+    double_path = moDir.lookupByClass("fabricProtPathEpCont")
+
+    for path in double_path:
+        node_a = int(path.nodeAId)
+        node_b = int(path.nodeBId)
+        path_endpoints[(node_a,node_b)] = path
+    
+    return path_endpoints
+
 
 def safe_string(string):
     unsafe_find = re.compile(r"[^a-zA-Z0-9_.-]")
