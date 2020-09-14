@@ -32,10 +32,19 @@ def create_bundle_interface_polgrp(interface, parent, *args, **kwargs):
 def create_port_block(interface, portselector):
     path = interface['newname'].split("/")
 
+    if "-" in path[2]:
+        fromPort, toPort = path[2].split("-")
+    else:
+        fromPort = path[2]
+        toPort = path[2]
+
+
     block = PortBlk(portselector, 
                     f"ethernet_{path[2]}",
                     descr=interface.get("description", ""), 
-                    fromPort=int(path[2]),
-                    toPort=int(path[2]))
+                    fromCard=int(path[1]),
+                    toCard=int(path[1]),
+                    fromPort=int(fromPort),
+                    toPort=int(toPort))
 
     return block
