@@ -6,7 +6,7 @@ import urllib3
 
 from cobra.mit.access import MoDirectory
 from cobra.mit.session import LoginSession
-from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd
+from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd, RsPathAtt
 from cobra.mit.request import ConfigRequest
 from cobra.model.infra import AccBndlGrp, RsLacpPol, HPortS, RsAccBaseGrp
 
@@ -37,6 +37,7 @@ with open("intnames.csv", "r") as csvfile:
             except KeyError:
                 pass
 
+networkdata = [x for x in networkdata if "newname" in x]
 
 tenant_list = excel.Tenant.unique().tolist()
 # remove nan from list
@@ -134,14 +135,14 @@ for tenant in alltenant:
                 try:
                     if epg['old_vlan_tag'] in interface['allowed_vlan']:
                         epg['static_path'].append({'interface': interface,
-                                                   'tag': epg['old_vlan_tag']})
+                                                   'tag': True})
                 except KeyError:
                     pass
 
                 try:
                     if epg['old_vlan_tag'] == interface['native_vlan']:
                         epg['static_path'].append({'interface': interface,
-                                                   'tag': 1})
+                                                   'tag': False})
                 except KeyError:
                     pass
 
@@ -275,5 +276,41 @@ for interface in networkdata:
 
         port_block = helpers.int.create_port_block(interface, interfaceselector)
         config.addMo(port_block)
+
+    # save leaf pair in interface definition
+    interface['leaf'] = leaf
+
+moDir.commit(config)
+
+
+path_endpoints = helpers.generic.find_path_endpoints(moDir)
+path_vpc = helpers.generic.find_path_vpc(moDir)
+path_po = helpers.generic.find_path_po(moDir)
+# Create static paths
+config = ConfigRequest()
+for tenant in alltenant:
+    for app in tenant['app']:
+        for epg in app['epg']:
+            for path in epg['static_path']:
+                interface = path['interface']
+                if "newname" in interface:
+                    if "port-channel" in interface['name']:
+                        staticpath = RsPathAtt(epg['aciobject'], tDn=str(path_po[interface['newname']].dn))
+                    elif "vpc" in interface['name']:
+                        staticpath = RsPathAtt(epg['aciobject'], tDn=str(path_vpc[interface['newname']].dn))
+                    elif "Ethernet" in interface['name']:
+                        pass
+                    else:
+                        raise KeyError("Unknown interface type")
+
+                    try:
+                        assert path['tag'] in interface['native_vlan']
+                        staticpath.mode = "native"
+                    except KeyError:
+                        staticpath.mode = "regular"
+
+                    staticpath.instrImedcy = "immediate"
+                    staticpath.encap = "vlan-" + str(path['tag'])
+                    config.addMo(staticpath)
 
 moDir.commit(config)
