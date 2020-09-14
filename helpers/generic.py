@@ -71,4 +71,14 @@ def safe_string(string):
         safe_char = UNSAFE_CHARACTER_REPLACE.get(i, "")
         string = string.replace(i, safe_char)
 
-    return string    
+    return string
+
+def leaf_str_to_tuple(leafs):
+    if "," in leafs:
+        leafarr = leafs.split(",")
+        assert len(leafarr) == 2
+        leaves = (int(leafarr[0]), int(leafarr[1]))
+    else:
+        leaves = (int(leafs),)
+    
+    return leaves

@@ -214,7 +214,7 @@ for interface in networkdata:
                     continue
                 except AssertionError:
                     raise AssertionError("Wrong interface name " + intf['newname'] + ", format 100/1/1")
-                leaf = (int(path[0]),)
+                leaf = helpers.generic.leaf_str_to_tuple(path[0])
                 int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface['newname'])
                 try:
                     assert leaf in switch_profiles
@@ -247,7 +247,7 @@ for interface in networkdata:
         except AssertionError:
             raise AssertionError("Wrong interface name " + interface['newname'] + ", format 100/1/1")
 
-        leaf = (int(path[0]),)
+        leaf = helpers.generic.leaf_str_to_tuple(path[0])
         int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(defaults.POLICY_GROUP_ACCESS)
         try:
             assert leaf in switch_profiles
