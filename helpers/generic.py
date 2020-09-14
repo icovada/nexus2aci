@@ -81,6 +81,26 @@ def find_path_endpoints(moDir):
     
     return path_endpoints
 
+def find_path_vpc(moDir):
+    vpcs = {}
+    filter = 'and(not(wcard(fabricPathEp.dn,"__ui_")),and(eq(fabricPathEp.lagT,"node"),wcard(fabricPathEp.dn,"^topology/pod-[\d]*/protpaths-")))'
+    vpc_paths = moDir.lookupByClass("fabricPathEp", propFilter=filter)
+
+    for path in vpc_paths:
+        vpcs[path.name] = path
+
+    return vpcs
+
+
+def find_path_po(moDir):
+    pos = {}
+    filter = 'and(not(wcard(fabricPathEp.dn,"__ui_")),eq(fabricPathEp.lagT,"link"))'
+    po_paths = moDir.lookupByClass("fabricPathEp", propFilter=filter)
+
+    for path in po_paths:
+        pos[path.name] = path
+
+    return pos
 
 def safe_string(string):
     unsafe_find = re.compile(r"[^a-zA-Z0-9_.-]")
