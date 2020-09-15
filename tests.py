@@ -281,12 +281,11 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface")
 
-        output = {1: {'port-channel': {30: {'allowed_vlan': [300], 
-                                            'members': [[100, 1, 8]], 
-                                            'lacp': True}},
-                      'Ethernet': {100: {1: {8: {'allowed_vlan': [300]}}}}}}
+        output = [{'allowed_vlan': [300], 'channel-group': 30, 'name': 'Ethernet100/1/8', 'protocol': 'lacp-active'},
+                  {'allowed_vlan': [300], 'name': 'port-channel30'}]
 
-        assert parse_switched_interface(test_data, {1: {}}) == output
+        func_out = parse_switched_interface(test_data)
+        assert func_out == output
 
     def test_vpc(self):
         config = ["interface port-channel40",
