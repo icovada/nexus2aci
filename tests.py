@@ -320,9 +320,13 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
-        output = {1: {'port-channel': {}, 'Ethernet': {300: {1: {'allowed_vlan': [300]}}}}}
+        output = [{'allowed_vlan': [300],
+                   'channel-group': 30,
+                   'name': 'Ethernet300/1',
+                   'protocol': None}]
 
-        assert parse_switched_interface(test_data, {1: {}}) == output
+        func_out = parse_switched_interface(test_data)
+        assert func_out == output
 
 
 if __name__ == '__main__':
