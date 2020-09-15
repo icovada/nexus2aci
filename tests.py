@@ -297,11 +297,10 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_conf = self.CiscoConfParse(config)
         test_data = test_conf.find_objects(r"^interface port-channel\d")
 
-        output = {'local': {"port-channel": {40: {"allowed_vlan": [2201, 2203],
-                                                  "vpc": 40}}},
-                  'fex': {}}
+        output = [{'allowed_vlan': [2201, 2203], 'name': 'port-channel40', 'vpc': 40}]
 
-        assert parse_switched_interface(test_data) == output
+        func_out = parse_switched_interface(test_data) 
+        assert func_out == output
 
     def test_fexfabric(self):
         config = ["interface Ethernet1/4",
