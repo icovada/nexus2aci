@@ -261,11 +261,10 @@ class TestParseSwitchedInt(unittest.TestCase):
         test_data = test_conf.find_objects(r"^interface Ethernet\d")
 
 
-        output = {1: {"port-channel": {},
-                      "Ethernet": {100: {1: {8: {"native_vlan": 300,
-                                                       }}}}}}
+        output = [{'name': 'Ethernet100/1/8', 'native_vlan': 300}]
 
-        assert parse_switched_interface(test_data, {1: {}}) == output
+        func_out = parse_switched_interface(test_data) 
+        assert func_out == output
 
     def test_portchannel(self):
         config = ["interface Ethernet100/1/8",
