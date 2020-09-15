@@ -299,18 +299,20 @@ for tenant in alltenant:
                     elif "vpc" in interface['name']:
                         staticpath = RsPathAtt(epg['aciobject'], tDn=str(path_vpc[interface['newname']].dn))
                     elif "Ethernet" in interface['name']:
-                        pass
+                        intpath = interface['newname'].split("/")                        
+                        parentpath = str(path_endpoints[(int(intpath[0]),)].dn)
+                        pathexp_path = f"/pathep-[eth{str(intpath[1])}/{str(intpath[2])}]"
+                        staticpath = RsPathAtt(epg['aciobject'], tDn=parentpath+pathexp_path)
                     else:
                         raise KeyError("Unknown interface type")
 
-                    try:
-                        assert path['tag'] in interface['native_vlan']
-                        staticpath.mode = "native"
-                    except KeyError:
+                    if path['tag']:
                         staticpath.mode = "regular"
+                    else:
+                        staticpath.mode = "native"
 
                     staticpath.instrImedcy = "immediate"
-                    staticpath.encap = "vlan-" + str(path['tag'])
+                    staticpath.encap = "vlan-" + str(epg['old_vlan_tag'])
                     config.addMo(staticpath)
 
 moDir.commit(config)
