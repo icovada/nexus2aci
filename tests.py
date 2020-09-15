@@ -1,9 +1,9 @@
 import unittest
 
-from helpers import allowed_vlan_to_list
-from helpers import parse_vlan_l2
-from helpers import parse_svi
-from helpers import parse_switched_interface
+from libs import allowed_vlan_to_list
+from libs import parse_vlan_l2
+from libs import parse_svi
+from libs import parse_switched_interface
 
 
 class TestAllowedVlanToList(unittest.TestCase):
