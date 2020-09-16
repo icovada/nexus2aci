@@ -250,6 +250,21 @@ class TestParseSwitchedInt(unittest.TestCase):
         func_out = parse_switched_interface(test_data)
         assert func_out == output
 
+    def test_remove_vlan(self):
+        config = ["interface Ethernet100/1/8",
+                  "  switchport mode trunk",
+                  "  switchport trunk allowed vlan 300-302,303",
+                  "  no shutdown"]
+
+        test_conf = self.CiscoConfParse(config)
+        test_data = test_conf.find_objects(r"^interface Ethernet\d")
+
+        output = [{"name": "Ethernet100/1/8",
+                   "allowed_vlan": [300, 303]}]
+
+        func_out = parse_switched_interface(test_data, {300: {}, 303: {}})
+        assert func_out == output
+
     def test_trunk_port_1_vlan(self):
         config = ["interface Ethernet100/1/8",
                   "  switchport mode trunk",
