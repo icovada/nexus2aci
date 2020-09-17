@@ -1,0 +1,20 @@
+interface Vlan2200
+  vrf member VRF-SYS-MGT
+  no ip redirects
+  ip address 172.25.63.250/22
+  no ipv6 redirects
+  hsrp version 2
+  hsrp 2200
+    authentication md5 key-chain hsrp-sys-mgt
+    priority 200
+    timers  5  15
+    ip 172.25.63.254
+  no shutdown
+
+vlan 2200
+  name System-Management
+
+interface Ethernet112/1/30
+  description SNMGP00377-ILO
+  switchport access vlan 2200
+  spanning-tree port type edge
