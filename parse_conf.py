@@ -3,6 +3,7 @@ from libs import *
 from filelist import entiredc
 import csv
 import pickle
+from helpers.generate_excel import generate_excel
 
 
 parseddc = {}
@@ -36,3 +37,5 @@ with open("intnames.csv", "w") as csvfile:
 
 with open("tempdata.bin", "wb") as tempdata:
     pickle.dump(flat, tempdata)
+
+generate_excel()
