@@ -3,6 +3,7 @@ import re
 from defaults import UNSAFE_CHARACTER_REPLACE
 
 def find_children(mo, moDir):
+    print("Get children of", mo.dn)
     dnQuery = DnQuery(mo.dn)
     dnQuery.queryTarget = "children"
     children =  moDir.query(dnQuery)
@@ -16,13 +17,13 @@ def find_children(mo, moDir):
 
     return childdict
 
-
-
 def find_switch_profiles(moDir):
+    print("Get switch profiles")
     swprofiles = {}
     leafswprofiles = moDir.lookupByClass("infraNodeP")
     
     for leafprof in leafswprofiles:
+        print("Get leaf profile for", leafprof.dn)
         leaves = []
         leafselectors = moDir.lookupByClass("infraNodeBlk", 
                                             propFilter=f'wcard(infraNodeBlk.dn, "uni/infra/nprof-{leafprof.name}")')

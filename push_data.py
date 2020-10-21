@@ -3,6 +3,8 @@ from copy import deepcopy
 import pickle
 import csv
 import urllib3
+import logging 
+import os
 
 from cobra.mit.access import MoDirectory
 from cobra.mit.session import LoginSession
@@ -17,14 +19,16 @@ import policymappings
 import helpers.generic
 import helpers.int
 
-
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+print("Reading excelout.xlsx")
 excel = pd.read_excel("excelout.xlsx")
 
+print("Reading tempdata.bin")
 with open("tempdata.bin", "rb") as data:
     networkdata = pickle.load(data)
 
+print("Reading intnames.csv")
 with open("intnames.csv", "r") as csvfile:
     reader = csv.DictReader(csvfile)
     for row in reader:
@@ -170,6 +174,7 @@ for tenant in alltenant:
                     if epg['old_vlan_tag'] in interface['allowed_vlan']:
                         epg['static_path'].append({'interface': interface,
                                                    'tag': True})
+                        print("Added static path %s in EPG %s", interface, epg['name'])
                 except KeyError:
                     pass
 
@@ -177,6 +182,7 @@ for tenant in alltenant:
                     if epg['old_vlan_tag'] == interface['native_vlan']:
                         epg['static_path'].append({'interface': interface,
                                                    'tag': False})
+                        print("Added static path %s in EPG %s", interface, epg['name'])
                 except KeyError:
                     pass
 
@@ -243,6 +249,7 @@ for tenant in alltenant:
 #  'vrf': [{'name': 'VINTAGE-GDC_VRF'}]}]
 
 # Init ACI session
+print("Logging into ACI")
 loginSession = LoginSession(acicreds.url, acicreds.username, acicreds.password)
 moDir = MoDirectory(loginSession)
 moDir.login()
@@ -271,8 +278,8 @@ for tenant in alltenant:
             bind = RsBd(fvAEPg, tnFvBDName=epg['bd']['name'])
             tenantconfig.addMo(bind)
 
+print("Committing tenant info")
 moDir.commit(tenantconfig)
-
 
 switch_profiles = helpers.generic.find_switch_profiles(moDir)
 

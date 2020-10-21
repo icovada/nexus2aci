@@ -65,6 +65,7 @@ def get_port_blocks(moDir, switch_profiles, leaf_tuple):
     """
 
     # Find all leaf profiles in which our leaves might be
+    print("Find all leaf profiles in which leaf", leaf_tuple, "could be")
     leafprofileids = set()
     for leaf in leaf_tuple:
         newleaves = set(x for x in list(switch_profiles) if leaf in x)
@@ -74,6 +75,7 @@ def get_port_blocks(moDir, switch_profiles, leaf_tuple):
     for ids in leafprofileids:
         leafintprofile = str(switch_profiles[ids]['leafintprofile'].dn)
 
+        print("Get port blocks in", leafintprofile)
         blocks = moDir.lookupByClass('infraPortBlk', parentDn=leafintprofile)
         for block in blocks:
             port_range = range(int(block.fromPort), int(block.toPort)+1)
@@ -84,5 +86,6 @@ def get_port_blocks(moDir, switch_profiles, leaf_tuple):
                     allports[card] = set()
                 for port in port_range:
                     allports[card].add(port)
-        
+
+    print("Used ports in leaf", leaf_tuple, ":", allports)
     return allports
