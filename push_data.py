@@ -1,21 +1,18 @@
-import pandas as pd
 from copy import deepcopy
 import pickle
 import csv
 import urllib3
-import logging 
-import os
 
+import pandas as pd
 from cobra.mit.access import MoDirectory
 from cobra.mit.session import LoginSession
 from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd, RsPathAtt
 from cobra.mit.request import ConfigRequest
-from cobra.model.infra import AccBndlGrp, RsLacpPol, HPortS, RsAccBaseGrp
+from cobra.model.infra import HPortS, RsAccBaseGrp
 
 
 import acicreds
 import defaults
-import policymappings
 import helpers.generic
 import helpers.int
 
@@ -289,7 +286,7 @@ bundleparent = moDir.lookupByDn('uni/infra/funcprof')
 config = ConfigRequest()
 for interface in networkdata:
     try:
-        if interface["ismember"] == True:
+        if interface["ismember"]:
             continue
     except KeyError:
         pass
@@ -343,7 +340,7 @@ for interface in networkdata:
 
                 port_block = helpers.int.create_port_block(intf, interfaceselector)
                 config.addMo(port_block)
-        
+
 
     if "Ethernet" in interface['name']:
         try:
@@ -361,7 +358,7 @@ for interface in networkdata:
         except AssertionError:
             # TODO: Create leaf_profile and interface selector profile
             raise AssertionError("No leaf profile for this interface")
-        
+
         try:
             interfaceselector = switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS]
         except KeyError:
@@ -401,10 +398,10 @@ for tenant in alltenant:
                     elif "vpc" in interface['name']:
                         staticpath = RsPathAtt(epg['aciobject'], tDn=str(path_vpc[interface['newname']].dn))
                     elif "Ethernet" in interface['name']:
-                        intpath = interface['newname'].split("/")                        
-                        parentpath = str(path_endpoints[(int(intpath[0]),)].dn)
+                        intpath = interface['newname'].split("/")
+                        PARENTPATH = str(path_endpoints[(int(intpath[0]),)].dn)
                         pathexp_path = f"/pathep-[eth{str(intpath[1])}/{str(intpath[2])}]"
-                        staticpath = RsPathAtt(epg['aciobject'], tDn=parentpath+pathexp_path)
+                        staticpath = RsPathAtt(epg['aciobject'], tDn=PARENTPATH + pathexp_path)
                     else:
                         raise KeyError("Unknown interface type")
 
