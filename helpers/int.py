@@ -48,3 +48,30 @@ def create_port_block(interface, portselector):
                     toPort=int(toPort))
 
     return block
+
+def get_port_blocks(moDir, leafinterfaceprofile):
+    """
+    Find all port blocks inside all interface selectors in a leaf interface profile.
+    
+    Parameters:
+    moDir (MoDirectory): MoDirectory(loginsession)
+    leafinterfaceprofile (str): Name of leaf interface profile
+
+    Returns:
+    allports (dict): Dict of cards containing a set of all ports inside it
+                     {1: {1,2,3,4,5}}
+    """
+
+    allports = {}
+    blocks = moDir.lookupByClass('infraPortBlk', parentDn="uni/infra/accportprof-" + leafinterfaceprofile)
+    for block in blocks:
+        port_range = range(int(block.fromPort), int(block.fromPort)+1)
+        card_range = range(int(block.fromCard), int(block.toCard)+1)
+
+        for card in card_range:
+            if card not in allports:
+                allports[card] = set()
+            for port in port_range:
+                allports[card].add(port)
+        
+    return allports
