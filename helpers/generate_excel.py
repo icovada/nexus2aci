@@ -95,7 +95,6 @@ def generate_excel():
         row['BD'] = bd(row)
         row['VRF-NEW'] = vrf(row)
         row['Tenant'] = tenant(row)
-        print(row)
         excelout.append(row)
     
     dfexcel = pd.DataFrame(excelout, columns=["Vlan ID",
