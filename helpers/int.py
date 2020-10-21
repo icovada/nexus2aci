@@ -49,12 +49,14 @@ def create_port_block(interface, portselector):
 
     return block
 
-def get_port_blocks(moDir, leafinterfaceprofile):
+def get_port_blocks(moDir, switch_profiles, leaf_tuple):
     """
-    Find all port blocks inside all interface selectors in a leaf interface profile.
+    Find all port blocks inside all interface selectors in a leaf interface profile
+    for a leaf, across all leaf profiles 
     
     Parameters:
     moDir (MoDirectory): MoDirectory(loginsession)
+    switch_profiles (dict): Output of helpers.generic.find_switch_profiles()
     leafinterfaceprofile (str): Name of leaf interface profile
 
     Returns:
@@ -62,16 +64,25 @@ def get_port_blocks(moDir, leafinterfaceprofile):
                      {1: {1,2,3,4,5}}
     """
 
-    allports = {}
-    blocks = moDir.lookupByClass('infraPortBlk', parentDn="uni/infra/accportprof-" + leafinterfaceprofile)
-    for block in blocks:
-        port_range = range(int(block.fromPort), int(block.fromPort)+1)
-        card_range = range(int(block.fromCard), int(block.toCard)+1)
+    # Find all leaf profiles in which our leaves might be
+    leafprofileids = set()
+    for leaf in leaf_tuple:
+        newleaves = set(x for x in list(switch_profiles) if leaf in x)
+        leafprofileids.update(newleaves)
 
-        for card in card_range:
-            if card not in allports:
-                allports[card] = set()
-            for port in port_range:
-                allports[card].add(port)
+    allports = {}
+    for ids in leafprofileids:
+        leafintprofile = str(switch_profiles[ids]['leafintprofile'].dn)
+
+        blocks = moDir.lookupByClass('infraPortBlk', parentDn=leafintprofile)
+        for block in blocks:
+            port_range = range(int(block.fromPort), int(block.toPort)+1)
+            card_range = range(int(block.fromCard), int(block.toCard)+1)
+
+            for card in card_range:
+                if card not in allports:
+                    allports[card] = set()
+                for port in port_range:
+                    allports[card].add(port)
         
     return allports
