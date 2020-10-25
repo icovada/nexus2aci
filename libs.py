@@ -328,18 +328,21 @@ def parse_nexus_pair_l2(conf1: str, conf2: str):
     sw2_switched:list = sw2.find_objects(r"^interface (port-channel|Ethernet).*")
 
     sw1_parsed = parse_switched_interface(sw1_switched, l2dict)
+
+    for interface in sw1_parsed:
+        interface.switch = 1
+    
     sw2_parsed = parse_switched_interface(sw2_switched, l2dict)
+
+    for interface in sw2_parsed:
+        interface.switch = 2
 
     match_port_channel(sw1_parsed)
     match_port_channel(sw2_parsed)
 
-    cage = {1: sw1_parsed, 2: sw2_parsed}
+    cage_config = match_vpc(sw1_parsed, sw2_parsed)
 
-    cage_config = match_vpc(cage, 1, 2)
-
-    flat = flatten_dict(cage_config)
-
-    return flat
+    return cage_config
 
 
 def consolidate_interfaces(wholefabric:list, inttype:str):

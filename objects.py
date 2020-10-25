@@ -7,9 +7,22 @@ class Interface():
     channel_group:Optional[int]
     native_vlan:int = 1
     allowed_vlan:Optional[List[int]] = []
+    cage:Optional[str]
+    switch:Optional[int]
 
     def __init__(self, name:str):
         self.name = name
+
+    def __str__(self) -> str:
+        outname = self.name
+
+        if hasattr(self, "switch"):
+            outname = str(self.switch) + "/" + outname
+        
+        if hasattr(self, "cage"):
+            outname = self.cage + "/" + outname
+        
+        return outname
 
     def allowed_vlan_add(self, newvlans:List[int]):
         self.allowed_vlan = self.allowed_vlan + newvlans
