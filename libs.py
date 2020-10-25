@@ -308,9 +308,19 @@ def flatten_dict(row_config):
     return out
 
 
-def parse_nexus_pair_l2(conf1, conf2):
-    # parse configs for access and distribution switches
-    # you should theoretically add all switches in the DC
+def parse_nexus_pair_l2(conf1: str, conf2: str):
+    """
+    Parse configs for access and distribution switches
+    you should theoretically add all switches in the DC
+
+    Args: 
+        - conf1 (str): File path to first Nexus in pair
+        - conf2 (str): File path to second Nexus in pair
+    
+    Returns:
+        - dict.
+    """
+    
     sw1 = ciscoconfparse.CiscoConfParse(conf1)
     sw2 = ciscoconfparse.CiscoConfParse(conf2)
 
