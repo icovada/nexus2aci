@@ -172,6 +172,10 @@ def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
             native_vlan = int(line.re_match(r"switchport access vlan (.*)$"))
             thisint.update({"native_vlan": native_vlan})
 
+        # If previous loop didn't find anything
+        if "native_vlan" not in thisint:
+            thisint.update({"native_vlan": 1})
+            
         for line in eth.re_search_children(r"switchport trunk allowed vlan ([0-9\-\,]*)$"):
             allowed_vlan = line.re_match(
                 r"switchport trunk allowed vlan ([0-9\-\,]*)$")
@@ -196,10 +200,6 @@ def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
             allowed_vlan_list = allowed_vlan_to_list(allowed_vlan, l2dict)
 
             thisint['allowed_vlan'] = thisint['allowed_vlan'] + allowed_vlan_list
-
-        if "native_vlan" not in thisint:
-            if mode == "access":
-                thisint["native_vlan"] = 1
 
         for line in eth.re_search_children(r"vpc \d"):
             vpc_id = line.re_match(r"vpc (\d*)$")
