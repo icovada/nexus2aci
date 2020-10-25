@@ -14,11 +14,11 @@ class Interface():
     def allowed_vlan_add(self, newvlans:List[int]):
         self.allowed_vlan = self.allowed_vlan + newvlans
     
-    def is_useless(self) -> bool:
+    def is_useful(self) -> bool:
         if len(self.__dict__) == 1:
-            return True
-        else:
             return False
+        else:
+            return True
 
 class PortChannel(Interface):
     vpc:Optional[int]
