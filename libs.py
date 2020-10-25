@@ -49,7 +49,7 @@ def parse_vlan_l2(conf:ciscoconfparse.CiscoConfParse, l2dict:dict=None) -> dict:
     return l2dict
 
 
-def parse_svi(conf, svidict):
+def parse_svi(conf:ciscoconfparse.CiscoConfParse, svidict:dict) -> dict:
     """
     Returns a dictionary with vlan names and l3 info.
     'svidict' must be output of parse_vlan_l2
