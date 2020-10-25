@@ -239,6 +239,8 @@ def match_port_channel(one_nexus_config: list) -> list:
                     if hasattr(eth_int, "channel_group"):
                         if eth_int.channel_group == po_int.po_id:
                             po_int.members.append(eth_int)
+                            po_int.cage = eth_int.cage
+                            po_int.switch = eth_int.switch
                             eth_int.ismember = True
     
     for i in one_nexus_config:
@@ -248,60 +250,46 @@ def match_port_channel(one_nexus_config: list) -> list:
     return one_nexus_config
 
 
-def match_vpc(row_config:Dict[int, dict], sw1_id:int, sw2_id:int) -> dict:
-    # Takes in input of parse_switched_interface
-    # Peers vpc configs in one single line
+def match_vpc(sw1:list, sw2:list) -> list:
+    """
+    Args:
+      - sw1 (list): List containing PortChannels
+      - sw2 (list): List containing PortChannels
+    Returns:
+      - cage(list): Sum of sw1 and sw2 and list of Vpcs
+    """
 
     vpc = []
     # Cycle all interfaces in switch 1
-    for interface in row_config[sw1_id]:
-        if type(interface) == PortChannel:
-            thisvpc = {'members': []}
-            # Find port-channels assigned to a vpc
-            if hasattr(interface, "vpc_id"):
-                # Create vpc object, add pointer to interface in members
-                thisvpcid = interface['vpc']
-                thisvpc['name'] = str(thisvpcid)
-                thisvpc['members'].append(interface)
-                # Find other vpc member in second switch
-                for interface2 in row_config[sw2_id]:
-                    if "port-channel" in interface2['name']:
-                        if "vpc" in interface2:
-                            if interface2['vpc'] == thisvpcid:
-                                thisvpc['members'].append(interface2)
-                                break
+    for po1 in [x for x in sw1 if type(x) == PortChannel]:
+        # Find port-channels assigned to a vpc
+        if hasattr(po1, "vpc"):
+            # Create vpc object, add pointer to interface in members
+            thisvpc = Vpc(po1.vpc)
+            thisvpc.members.append(po1)
+            thisvpc.cage = po1.cage
+            # Find other vpc member in second switch
+            for po2 in [x for x in sw2 if type(x) == PortChannel]:
+                if hasattr(po2, "vpc"):
+                    if po2.vpc == thisvpc.vpcid:
+                        thisvpc.members.append(po2)
+                        break
 
-                # Some VPC might only have one member
-                # This happens because one of the port-channels is empty
-                # and has been deleted in the previous step
-                if len(thisvpc['members']) == 2:
-                    vpc.append(thisvpc)
-                elif len(thisvpc['members']) == 1:
-                    pass
-                else:
-                    raise ValueError("Wrong number of VPC members")
+            # Some VPC might only have one member
+            # This happens because one of the port-channels is empty
+            # and has been deleted in the previous step
+            if len(thisvpc.members) == 2:
+                vpc.append(thisvpc)
+            elif len(thisvpc.members) == 1:
+                pass
+            else:
+                raise ValueError("Wrong number of VPC members")
 
-    row_config['vpc'] = vpc
-    return row_config
+    cage = sw1 + sw2 + vpc
+    return cage
 
 
-def flatten_dict(row_config:dict) -> list:
-    "Flattens output of match_vpc"
-    out = []
-    for k, v in row_config.items():
-        if k == 'vpc':
-            separator = "-"
-        else:
-            separator = "/"
-
-        for interface in v:
-            interface['name'] = str(k) + separator + interface['name']
-            out.append(interface)
-
-    return out
-
-
-def parse_nexus_pair_l2(conf1: str, conf2: str):
+def parse_nexus_pair_l2(conf1: str, conf2: str, cage: str) -> list:
     """
     Parse configs for access and distribution switches
     you should theoretically add all switches in the DC
@@ -309,6 +297,7 @@ def parse_nexus_pair_l2(conf1: str, conf2: str):
     Args: 
         - conf1 (str): File path to first Nexus in pair
         - conf2 (str): File path to second Nexus in pair
+        - cage (str): Cage ID
     
     Returns:
         - dict.
@@ -329,16 +318,21 @@ def parse_nexus_pair_l2(conf1: str, conf2: str):
 
     for interface in sw1_parsed:
         interface.switch = 1
+        interface.cage = cage
     
     sw2_parsed = parse_switched_interface(sw2_switched, l2dict)
 
     for interface in sw2_parsed:
         interface.switch = 2
+        interface.cage = cage
 
     match_port_channel(sw1_parsed)
     match_port_channel(sw2_parsed)
 
     cage_config = match_vpc(sw1_parsed, sw2_parsed)
+
+    for interface in cage_config:
+        interface.cage = cage
 
     return cage_config
 

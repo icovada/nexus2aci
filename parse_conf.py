@@ -1,16 +1,15 @@
 import yaml
-from libs import parse_nexus_pair_l2, consolidate_interfaces, flatten_dict
+from libs import parse_nexus_pair_l2, consolidate_interfaces
 from filelist import entiredc
 import csv
 import pickle
 from helpers.generate_excel import generate_excel
 
 
-parseddc = {}
-for k, v in entiredc.items():
-    parseddc[k] = parse_nexus_pair_l2(v[0], v[1])
+parseddc = []
 
-flat = flatten_dict(parseddc)
+for k, v in entiredc.items():
+    parseddc = parseddc + parse_nexus_pair_l2(v[0], v[1], k)
 
 consolidate_interfaces(flat, "port-channel")
 consolidate_interfaces(flat, "vpc")
