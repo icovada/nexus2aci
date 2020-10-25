@@ -1,10 +1,10 @@
 import re
 import ipaddress
 import ciscoconfparse
-from typing import List
+from typing import List, Dict, Any
 from objects import Interface, PortChannel, Vpc
 
-def allowed_vlan_to_list(vlanlist:str, l2dict:dict=None) -> list:
+def allowed_vlan_to_list(vlanlist:str, l2dict:dict=None) -> List[int]:
     """
     Expands vlan ranges and checks if the vlan is in l2dict
     
@@ -17,7 +17,7 @@ def allowed_vlan_to_list(vlanlist:str, l2dict:dict=None) -> list:
     """
 
     split = vlanlist.split(",")
-    outlist = []
+    outlist:List[int] = []
     for vlan in split:
         if "-" in vlan:
             begin, end = vlan.split("-")
@@ -32,7 +32,7 @@ def allowed_vlan_to_list(vlanlist:str, l2dict:dict=None) -> list:
     return outlist
 
 
-def parse_vlan_l2(conf:ciscoconfparse.CiscoConfParse, l2dict:dict=None) -> dict:
+def parse_vlan_l2(conf:ciscoconfparse.CiscoConfParse, l2dict:Dict[int, Dict[str, str]]=None) -> Dict[int, Dict[str, str]]:
     if l2dict is None:
         l2dict = {1: {}}
 
@@ -102,7 +102,7 @@ def parse_svi(conf:ciscoconfparse.CiscoConfParse, svidict:dict) -> dict:
     return svidict
 
 
-def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
+def parse_switched_interface(interfaces:list, l2dict:dict=None) -> List[Any]:
     # Parse switched interface and expand vlan list
     # l2dict is passed through to allowed_vlan_to_list
     thisswitch = []
@@ -219,7 +219,7 @@ def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
 
     for interface in thisswitch:
         # Remove interfaces with only names
-        if len(interface) == 1:
+        if not interface.is_useful():
             thisswitch.remove(interface)
 
     return thisswitch
@@ -292,7 +292,7 @@ def match_vpc(row_config:dict, sw1_id:int, sw2_id:int) -> dict:
 
 
 def flatten_dict(row_config:dict) -> list:
-    "Flattens outout of match_vpc"
+    "Flattens output of match_vpc"
     out = []
     for k, v in row_config.items():
         if k == 'vpc':
@@ -324,12 +324,12 @@ def parse_nexus_pair_l2(conf1: str, conf2: str):
 
     # Combine info for VLANs for all switches.
     # Just one switch could do, but why not showing off?
-    sw1_l2 = parse_vlan_l2(sw1)
-    l2dict = parse_vlan_l2(sw2, sw1_l2)
+    sw1_l2:dict = parse_vlan_l2(sw1)
+    l2dict:dict = parse_vlan_l2(sw2, sw1_l2)
 
     # Filter all switched interfaces from access switches
-    sw1_switched = sw1.find_objects(r"^interface (port-channel|Ethernet).*")
-    sw2_switched = sw2.find_objects(r"^interface (port-channel|Ethernet).*")
+    sw1_switched:list = sw1.find_objects(r"^interface (port-channel|Ethernet).*")
+    sw2_switched:list = sw2.find_objects(r"^interface (port-channel|Ethernet).*")
 
     sw1_parsed = parse_switched_interface(sw1_switched, l2dict)
     sw2_parsed = parse_switched_interface(sw2_switched, l2dict)
