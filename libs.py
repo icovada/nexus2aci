@@ -100,26 +100,6 @@ def parse_svi(conf:ciscoconfparse.CiscoConfParse, svidict:dict) -> dict:
     return svidict
 
 
-def transform_port_numbers(dic, path):
-    """
-    This function "flattens" port numbers, transforming module
-    3 and 4 interface numbers as if everything was module 1
-    path should look like
-    ["Ethernet", 1, 1, 36]
-    """
-
-    if len(path) == 3:
-        is_ethernet = True if path[0] == "Ethernet" else False
-        is_secondary_module = True if path[1] > 1 and path[1] < 100 else False
-
-        if is_ethernet and is_secondary_module:
-            ports_in_mod1 = len(dic["Ethernet"][1])
-            path[1] = 1
-            path[2] = path[2] + ports_in_mod1
-
-    return path
-
-
 def parse_switched_interface(interfaces, l2dict=None):
     # Parse switched interface and expand vlan list
     # l2dict is passed through to allowed_vlan_to_list
