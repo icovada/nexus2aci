@@ -1,6 +1,7 @@
 import re
 import ipaddress
 import ciscoconfparse
+from objects import Interface, PortChannel, Vpc
 
 def allowed_vlan_to_list(vlanlist:str, l2dict:dict=None) -> list:
     """
@@ -109,12 +110,19 @@ def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
         # Split interface name in various pieces
         eth_type = eth.re_match(r"interface ([A-Za-z\-]*)(\/*\d*)+")
         eth_id = eth.re_match(r"interface [A-Za-z\-]*((\/*\d*)+)")
+        name = eth_type + eth_id
 
-        thisint = {'name': eth_type + eth_id}
+        if eth_type == "Ethernet":
+            thisint = Interface(name)
+        elif eth_type == "port-channel":
+            thisint = PortChannel(name)
+        else:
+            continue
+
         # find description
         for line in eth.re_search_children("description"):
             description = line.re_match(r"description (.*)$")
-            thisint.update({"description": description})
+            thisint.description = description
 
         # Ignore non-l2 ports
         is_l3 = True
@@ -145,18 +153,18 @@ def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
             elif mode == 'passive':
                 protocol = 'lacp-passive'
             elif mode == '':
-                protocol = None
+                protocol = ''
             else:
                 raise ValueError("Could not parse link aggregation protcol")
 
-            thisint['protocol'] = protocol
+            thisint.protocol = protocol
 
             # Peer-link, skip this interface
             if len(eth.re_search_children(r"vpc peer-link")) != 0:
                 peer_link = True
 
             if peer_link is False:
-                thisint.update({'channel-group': channel_group_id})
+                thisint.channel_group = channel_group_id
 
         if peer_link:
             thisswitch.append(thisint)
@@ -166,16 +174,14 @@ def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
         for line in eth.re_search_children("switchport trunk native vlan"):
             native_vlan = int(line.re_match(
                 r"switchport trunk native vlan (.*)$"))
-            thisint.update({"native_vlan": native_vlan})
+            thisint.native_vlan = native_vlan
 
         for line in eth.re_search_children("switchport access vlan"):
             native_vlan = int(line.re_match(r"switchport access vlan (.*)$"))
-            thisint.update({"native_vlan": native_vlan})
+            thisint.native_vlan = native_vlan
 
-        # If previous loop didn't find anything
-        if "native_vlan" not in thisint:
-            thisint.update({"native_vlan": 1})
-            
+        # No need to set native vlan if not set, Interface already sets it as 1
+
         for line in eth.re_search_children(r"switchport trunk allowed vlan ([0-9\-\,]*)$"):
             allowed_vlan = line.re_match(
                 r"switchport trunk allowed vlan ([0-9\-\,]*)$")
@@ -188,7 +194,7 @@ def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
                     pass
 
             if len(allowed_vlan_list) != 0:
-                thisint.update({"allowed_vlan": allowed_vlan_list})
+                thisint.allowed_vlan = allowed_vlan_list
 
         for line in eth.re_search_children("switchport trunk allowed vlan add"):
             # In some cases a vlan list might be split over multiple lines
@@ -199,11 +205,14 @@ def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
                 r"switchport trunk allowed vlan add ([0-9\-\,]*)$$")
             allowed_vlan_list = allowed_vlan_to_list(allowed_vlan, l2dict)
 
-            thisint['allowed_vlan'] = thisint['allowed_vlan'] + allowed_vlan_list
+            thisint.allowed_vlan_add(allowed_vlan_list)
 
         for line in eth.re_search_children(r"vpc \d"):
             vpc_id = line.re_match(r"vpc (\d*)$")
-            thisint.update({"vpc": int(vpc_id)})
+            if isinstance(thisint, PortChannel):
+                thisint.vpc = int(vpc_id)
+            else:
+                AssertionError("Invalid vPC tag inside ethernet interface")
 
         thisswitch.append(thisint)
 
