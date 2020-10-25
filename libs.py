@@ -100,7 +100,7 @@ def parse_svi(conf:ciscoconfparse.CiscoConfParse, svidict:dict) -> dict:
     return svidict
 
 
-def parse_switched_interface(interfaces, l2dict=None):
+def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
     # Parse switched interface and expand vlan list
     # l2dict is passed through to allowed_vlan_to_list
     thisswitch = []
@@ -215,7 +215,7 @@ def parse_switched_interface(interfaces, l2dict=None):
     return thisswitch
 
 
-def match_port_channel(one_nexus_config):
+def match_port_channel(one_nexus_config: list) -> list:
     """
     Takes in 'thisswitch' from parse_switched_interface
     Returns list of port channels with members
@@ -244,7 +244,7 @@ def match_port_channel(one_nexus_config):
     return one_nexus_config
 
 
-def match_vpc(row_config, sw1_id, sw2_id):
+def match_vpc(row_config:dict, sw1_id:int, sw2_id:int) -> dict:
     # Takes in input of parse_switched_interface
     # Peers vpc configs in one single line
 
@@ -281,7 +281,7 @@ def match_vpc(row_config, sw1_id, sw2_id):
     return row_config
 
 
-def flatten_dict(row_config):
+def flatten_dict(row_config:dict) -> list:
     "Flattens outout of match_vpc"
     out = []
     for k, v in row_config.items():
@@ -336,7 +336,7 @@ def parse_nexus_pair_l2(conf1: str, conf2: str):
     return flat
 
 
-def consolidate_interfaces(wholefabric, inttype):
+def consolidate_interfaces(wholefabric:list, inttype:str):
     """
     Take a list of interfaces, find port-channels and 
     consolidate vlan membership between all interfaces
