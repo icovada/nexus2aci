@@ -150,15 +150,13 @@ def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
             channel_group_id = int(line.re_match(r"channel-group (\d*)"))
             mode = line.re_match(r"mode (\w*)")
             if mode == 'active':
-                protocol = 'lacp-active'
+                thisint.protocol = 'lacp-active'
             elif mode == 'passive':
-                protocol = 'lacp-passive'
+                thisint.protocol = 'lacp-passive'
             elif mode == '':
-                protocol = ''
+                pass
             else:
                 raise ValueError("Could not parse link aggregation protcol")
-
-            thisint.protocol = protocol
 
             # Peer-link, skip this interface
             if len(eth.re_search_children(r"vpc peer-link")) != 0:
