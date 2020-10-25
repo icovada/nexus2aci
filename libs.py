@@ -1,6 +1,7 @@
 import re
 import ipaddress
 import ciscoconfparse
+from typing import List
 from objects import Interface, PortChannel, Vpc
 
 def allowed_vlan_to_list(vlanlist:str, l2dict:dict=None) -> list:

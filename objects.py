@@ -1,12 +1,12 @@
-from typing import List
+from typing import List, Optional
 
 class Interface():
-    description:str = ""
+    description:Optional[str]
     ismember:bool = False
-    protocol:str = ""
-    channel_group:int = 0
+    protocol:Optional[str] = ""
+    channel_group:Optional[int]
     native_vlan:int = 1
-    allowed_vlan:List[int] = []
+    allowed_vlan:Optional[List[int]] = []
 
     def __init__(self, name:str):
         print(type(self))
