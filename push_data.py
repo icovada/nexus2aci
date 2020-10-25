@@ -44,30 +44,89 @@ tenant_list = excel.Tenant.unique().tolist()
 # remove nan from list
 clean_tenant_list = [x for x in tenant_list if str(x) != 'nan']
 
+
+# Init ACI session
+print("Logging into ACI")
+loginSession = LoginSession(acicreds.url, acicreds.username, acicreds.password)
+moDir = MoDirectory(loginSession)
+moDir.login()
+uniMo = moDir.lookupByDn('uni')
+
 data = {}
 
 fabric = []
 alltenant = []
 
+# Get all tenants
+print("Get list of all tenants")
+fabric_alltenants = moDir.lookupByClass("fvTenant")
+# Make a dict hashed by name for faster lookup
+fabric_alltenantsdict = {x.name: x for x in fabric_alltenants}
+
+print("Get list of all Application Profiles")
+fabric_allaps = moDir.lookupByClass("fvAp")
+
+print("Get list of all EPGs")
+fabric_allepgs = moDir.lookupByClass("fvAEPg")
+
+print("Get list of all BDs")
+fabric_allbds = moDir.lookupByClass("fvBD")
+
+print("Get list of all EPG-BD relationships")
+fabric_allfkbds = moDir.lookupByClass("fvRsBd")
+
+
 for tenant in clean_tenant_list:
+    if tenant in fabric_alltenantsdict:
+        tenantobj = fabric_alltenantsdict[tenant]
+    else:
+        tenantobj = Tenant(uniMo, tenant)
+
     thistenant = excel.loc[excel['Tenant'] == tenant]
     app_list = thistenant.ANP.unique().tolist()
     clean_app_list = [x for x in app_list if str(x) != 'nan']
     allapp = []
     all_tenant_bd = []
 
+    print(f"Get list of all Application Profiles inside tenant {tenantobj.name}")
+    # Find all Application Profiles belonging to this tenant
+    fabric_tenantapps = [x for x in fabric_allaps if x._BaseMo__parentDnStr == tenantobj.dn]
+
+    # Get dict of tenants keyed by name so we can search them
+    fabric_tenantappdict = {x.name: x for x in fabric_tenantapps}
+
     for app in clean_app_list:
+        if app in fabric_tenantappdict:
+            appobject = fabric_tenantappdict[app]
+        else:
+            appobject = Ap(tenantobj, app)
+
         app_bd_list = []
         thisapp = thistenant.loc[thistenant['ANP'] == app]
         epg_list = thisapp.EPG.unique().tolist()
         clean_epg_list = [x for x in epg_list if str(x) != 'nan']
         all_app_epg = []
 
+        # Find all EPGs belonging to this Application Profile
+        fabric_appepgs = [x for x in fabric_allepgs if x._BaseMo__parentDnStr == appobject.dn]
+
+        # Get dict of EPGs by name so we can search them
+        fabric_appepgdict = {x.name: x for x in fabric_appepgs}
+
         for epg in clean_epg_list:
+            if epg in fabric_appepgdict:
+                epgobject = fabric_appepgdict[epg]
+            else:
+                epgobject = AEPg(appobject, epg)
+
             thisepg = thisapp.loc[thisapp['EPG'] == epg]
             bd_list = thisepg.BD.unique().tolist()
             clean_bd_list = [x for x in bd_list if str(x) != 'nan']
             assert len(clean_bd_list) == 1
+
+            # Find all RsBds belonging to this EPG, should be one or less
+            fabric_epgfkbds = [x for x in fabric_allfkbds if x._BaseMo__parentDnStr == epgobject.dn]
+            assert len(fabric_epgfkbds) <= 1
 
             for bd in clean_bd_list:
                 thisbd = thisepg.loc[thisepg['BD'] == bd]
@@ -245,12 +304,6 @@ for tenant in alltenant:
 #  'protocol_policy': {},
 #  'vrf': [{'name': 'VINTAGE-GDC_VRF'}]}]
 
-# Init ACI session
-print("Logging into ACI")
-loginSession = LoginSession(acicreds.url, acicreds.username, acicreds.password)
-moDir = MoDirectory(loginSession)
-moDir.login()
-uniMo = moDir.lookupByDn('uni')
 
 tenantconfig = ConfigRequest()
 for tenant in alltenant:
