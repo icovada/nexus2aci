@@ -31,14 +31,14 @@ with open("intnames.csv", "r") as csvfile:
     for row in reader:
         for interface in networkdata:
             try:
-                if interface['name'] == row['name']:
+                if str(interface) == row['name']:
                     if row['newname'] != "":
-                        interface['newname'] = row['newname']
+                        interface.newname = row['newname']
                     break
             except KeyError:
                 pass
 
-networkdata = [x for x in networkdata if "newname" in x]
+networkdata = [x for x in networkdata if hasattr(x, "newname")]
 
 tenant_list = excel.Tenant.unique().tolist()
 # remove nan from list
