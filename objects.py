@@ -9,6 +9,7 @@ class Interface():
         self.protocol:Optional[str] = ""
         self.channel_group:Optional[int]
         self.native_vlan:int = 1
+        # TODO: Change to Set
         self.allowed_vlan:Optional[List[int]] = []
         self.cage:Optional[str]
         self.switch:Optional[int]
@@ -60,3 +61,11 @@ class Vpc(PortChannel):
         self.members:List[PortChannel] = []
         name = "vpc" + str(vpcid)
         super().__init__(name)
+
+    def __str__(self) -> str:
+        outname = self.name
+
+        if hasattr(self, "cage"):
+            outname = self.cage + "/" + outname
+        
+        return outname
