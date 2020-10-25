@@ -6,9 +6,9 @@ class Interface():
         self.name = name
         self.description:Optional[str]
         self.ismember:bool = False
-        self.protocol:Optional[str] = ""
+        self.protocol:Optional[str]
         self.channel_group:Optional[int]
-        self.native_vlan:int = 1
+        self.native_vlan:int
         # TODO: Change to Set
         self.allowed_vlan:Optional[List[int]] = []
         self.cage:Optional[str]
@@ -54,6 +54,29 @@ class PortChannel(Interface):
                 return False
         else:
             return False
+
+    def inherit(self):
+        for member in self.members:
+
+            for vlan in member.allowed_vlan:
+                if vlan not in self.allowed_vlan:
+                    self.allowed_vlan_add([vlan,])
+
+            if not hasattr(self, "native_vlan"):
+                self.native_vlan = member.native_vlan
+            else:
+                assert self.native_vlan == member.native_vlan
+
+            if not hasattr(self, "protocol"):
+                self.protocol = member.protocol
+            else:
+                assert self.protocol == member.protocol
+
+            if not hasattr(self, "description"):        
+                self.description = member.description
+
+            member.ismember = True
+
 
 class Vpc(PortChannel):
     def __init__(self, vpcid:int):

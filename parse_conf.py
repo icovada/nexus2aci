@@ -1,5 +1,6 @@
+from objects import PortChannel, Vpc
 import yaml
-from libs import parse_nexus_pair_l2, consolidate_interfaces
+from libs import parse_nexus_pair_l2
 from filelist import entiredc
 import csv
 import pickle
@@ -11,21 +12,12 @@ parseddc = []
 for k, v in entiredc.items():
     parseddc = parseddc + parse_nexus_pair_l2(v[0], v[1], k)
 
-consolidate_interfaces(flat, "port-channel")
-consolidate_interfaces(flat, "vpc")
+for interface in parseddc:
+    try:
+        interface.inherit()
+    except AttributeError:
+        pass
 
-# Data at this point looks like this:
-
-# {'description': 'VERSO_CORESNANGDC-1_E_2',
-#  'ismember': True,
-#  'members': [{'ismember': True, 'name': 'agg/1/Ethernet7/2'},
-#              {'ismember': True, 'name': 'agg/1/Ethernet8/2'},
-#              {'ismember': True, 'name': 'agg/1/Ethernet9/2'},
-#              {'description': 'CORESNANGDC-2',
-#               'ismember': True,
-#               'name': 'agg/1/Ethernet10/2'}],
-#  'name': 'agg/1/port-channel105',
-#  'vpc': 105}
 
 # Export interface names for renaming
 allintdata = []
