@@ -1,5 +1,5 @@
 import yaml
-from libs import *
+from libs import parse_nexus_pair_l2, consolidate_interfaces, flatten_dict
 from filelist import entiredc
 import csv
 import pickle

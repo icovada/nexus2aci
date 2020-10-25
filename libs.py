@@ -102,7 +102,7 @@ def parse_svi(conf:ciscoconfparse.CiscoConfParse, svidict:dict) -> dict:
     return svidict
 
 
-def parse_switched_interface(interfaces:list, l2dict:dict=None) -> List[Any]:
+def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
     # Parse switched interface and expand vlan list
     # l2dict is passed through to allowed_vlan_to_list
     thisswitch = []
@@ -234,37 +234,33 @@ def match_port_channel(one_nexus_config: list) -> list:
     emptypo = []
     # Find list of all port channels
     for po_int in one_nexus_config:
-        if 'name' in po_int:
-            if 'port-channel' in po_int['name']:
-                po_id = int(po_int['name'][12:])
-                po_int['members'] = []
-                for eth_int in one_nexus_config:
-                    if 'name' in eth_int:
-                        if 'Ethernet' in eth_int['name']:
-                            if 'channel-group' in eth_int:
-                                if eth_int['channel-group'] == po_id:
-                                    po_int['members'].append(eth_int)
-
-                if len(po_int['members']) == 0:
-                    emptypo.append(po_int)
+        if type(po_int) == PortChannel:
+            po_int.members = []
+            for eth_int in one_nexus_config:
+                if type(eth_int) == Interface:
+                    if hasattr(eth_int, "channel_group"):
+                        if eth_int.channel_group == po_int.po_id:
+                            po_int.members.append(eth_int)
+                            eth_int.ismember = True
     
-    for i in emptypo:
-        one_nexus_config.remove(i)
+    for i in one_nexus_config:
+        if not i.is_useful():
+            one_nexus_config.remove(i)
 
     return one_nexus_config
 
 
-def match_vpc(row_config:dict, sw1_id:int, sw2_id:int) -> dict:
+def match_vpc(row_config:Dict[int, dict], sw1_id:int, sw2_id:int) -> dict:
     # Takes in input of parse_switched_interface
     # Peers vpc configs in one single line
 
     vpc = []
     # Cycle all interfaces in switch 1
     for interface in row_config[sw1_id]:
-        if "port-channel" in interface['name']:
+        if type(interface) == PortChannel:
             thisvpc = {'members': []}
             # Find port-channels assigned to a vpc
-            if 'vpc' in interface:
+            if hasattr(interface, "vpc_id"):
                 # Create vpc object, add pointer to interface in members
                 thisvpcid = interface['vpc']
                 thisvpc['name'] = str(thisvpcid)
@@ -319,8 +315,8 @@ def parse_nexus_pair_l2(conf1: str, conf2: str):
     Returns:
         - dict.
     """
-    sw1 = ciscoconfparse.CiscoConfParse(conf1)
-    sw2 = ciscoconfparse.CiscoConfParse(conf2)
+    sw1:ciscoconfparse.ciscoconfparse.CiscoConfParse = ciscoconfparse.CiscoConfParse(conf1)
+    sw2:ciscoconfparse.ciscoconfparse.CiscoConfParse = ciscoconfparse.CiscoConfParse(conf2)
 
     # Combine info for VLANs for all switches.
     # Just one switch could do, but why not showing off?
