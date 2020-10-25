@@ -2,9 +2,18 @@ import re
 import ipaddress
 import ciscoconfparse
 
-def allowed_vlan_to_list(vlanlist, l2dict=None):
-    # Expands vlan ranges and checks if the vlan is in l2dict
-    # l2dict is the result of parse_vlan_l2
+def allowed_vlan_to_list(vlanlist:str, l2dict:dict=None) -> list:
+    """
+    Expands vlan ranges and checks if the vlan is in l2dict
+    
+    Args:
+      - vlanlist (str): String of vlans from config, i.e. 1,2,3-5
+      - l2dict (dict): Output of  `parse_vlan_l2`
+    
+    Returns:
+      - list
+    """
+
     split = vlanlist.split(",")
     outlist = []
     for vlan in split:
@@ -21,7 +30,7 @@ def allowed_vlan_to_list(vlanlist, l2dict=None):
     return outlist
 
 
-def parse_vlan_l2(conf, l2dict=None):
+def parse_vlan_l2(conf:ciscoconfparse.CiscoConfParse, l2dict:dict=None) -> dict:
     if l2dict is None:
         l2dict = {1: {}}
 
@@ -320,7 +329,6 @@ def parse_nexus_pair_l2(conf1: str, conf2: str):
     Returns:
         - dict.
     """
-    
     sw1 = ciscoconfparse.CiscoConfParse(conf1)
     sw2 = ciscoconfparse.CiscoConfParse(conf2)
 
