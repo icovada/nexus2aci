@@ -21,14 +21,13 @@ for interface in parseddc:
 
 # Export interface names for renaming
 allintdata = []
-for i in flat:
-    if "port-channel" in i['name']:
-        if 'ismember' in i:
+for i in parseddc:
+    if type(i) == PortChannel:
+        if i.ismember:
             continue
-    thisint = {"newname": ""}
-    thisint.update({"name": i.get("name", "")})
-    thisint.update({"description": i.get("description", "")})
-
+    thisint = {"newname": "",
+               "name": str(i),
+               "description": i.description if hasattr(i, "description") else ""}
     allintdata.append(thisint)
 
 
@@ -40,6 +39,6 @@ with open("intnames.csv", "w") as csvfile:
 
 
 with open("tempdata.bin", "wb") as tempdata:
-    pickle.dump(flat, tempdata)
+    pickle.dump(parseddc, tempdata)
 
 generate_excel()
