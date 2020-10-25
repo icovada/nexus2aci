@@ -1,17 +1,17 @@
 from typing import List, Optional
 
 class Interface():
-    description:Optional[str]
-    ismember:bool = False
-    protocol:Optional[str] = ""
-    channel_group:Optional[int]
-    native_vlan:int = 1
-    allowed_vlan:Optional[List[int]] = []
-    cage:Optional[str]
-    switch:Optional[int]
 
     def __init__(self, name:str):
         self.name = name
+        self.description:Optional[str]
+        self.ismember:bool = False
+        self.protocol:Optional[str] = ""
+        self.channel_group:Optional[int]
+        self.native_vlan:int = 1
+        self.allowed_vlan:Optional[List[int]] = []
+        self.cage:Optional[str]
+        self.switch:Optional[int]
 
     def __str__(self) -> str:
         outname = self.name
@@ -34,12 +34,11 @@ class Interface():
             return True
 
 class PortChannel(Interface):
-    vpc:Optional[int]
-    po_id:int
-    members:List[Interface]
 
     def __init__(self, name:str):
-        print(type(self))
+        self.vpc:Optional[int]
+        self.po_id:int
+        self.members:List[Interface]
         if type(self) == PortChannel:
             # Do not run if we are being subclassed
             self.po_id = int(name[12:])
@@ -58,5 +57,6 @@ class PortChannel(Interface):
 class Vpc(PortChannel):
     def __init__(self, vpcid:int):
         self.vpcid = vpcid
+        self.members:List[PortChannel] = []
         name = "vpc" + str(vpcid)
         super().__init__(name)
