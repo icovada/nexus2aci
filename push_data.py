@@ -89,11 +89,15 @@ fabric_allfkbdvrfs = moDir.lookupByClass("fvRsCtx")
 # We will store the bd/VLAN id associations here
 bd_tag_assoc: Dict[str, int] = {}
 
+found = 0
+added = 0
+
 fabricconfig = ConfigRequest()
 for tenant in clean_tenant_list:
     if tenant in fabric_alltenantsdict:
         tenantobj = fabric_alltenantsdict[tenant]
         print(f"Found Tenant: {tenantobj.name}")
+        found = found + 1
     else:
         tenantobj = Tenant(uniMo, tenant)
         fabricconfig.addMo(tenantobj)
@@ -124,10 +128,12 @@ for tenant in clean_tenant_list:
         if app in fabric_tenantappdict:
             appobject = fabric_tenantappdict[app]
             print(f"Found Application profile: {appobject.name}")
+            found = found + 1
         else:
             appobject = Ap(tenantobj, app)
             fabricconfig.addMo(appobject)
             print(f"CREATED Application profile: {appobject.name}")
+            added = added + 1
 
         app_bd_list = []
         thisapp = thistenant.loc[thistenant['ANP'] == app]
@@ -145,10 +151,12 @@ for tenant in clean_tenant_list:
             if epg in fabric_appepgdict:
                 epgobject = fabric_appepgdict[epg]
                 print(f"Found EPG: {epgobject.name}")
+                found = found + 1
             else:
                 epgobject = AEPg(appobject, epg)
                 fabricconfig.addMo(epgobject)
                 print(f"CREATED EPG: {epgobject.name}")
+                added = added + 1
 
             thisepg = thisapp.loc[thisapp['EPG'] == epg]
             bd_list = thisepg.BD.unique().tolist()
@@ -168,29 +176,35 @@ for tenant in clean_tenant_list:
                 if bd in fabric_epgfkepgbdtnFvBDNames:
                     bdobject = fabric_tenantbdnames[bd]
                     print(f"Found BD: {bdobject.name}")
+                    found = found + 1
                 else:
                     bdobject = BD(tenantobj, name=thisrow['BD'])
                     fabricconfig.addMo(bdobject)
                     print(f"CREATED BD: {bdobject.name}")
+                    added = added + 1
 
                 # Check link with EPG
                 if str(bdobject.dn) in fabric_epgfkepgbddns:
                     fkepgbdobject = fabric_epgfkepgbddns[bdobject.dn]
                     print(f"Found link between APP {appobject.name} and BD {bdobject.name}")
+                    found = found + 1
                 else:
                     fkepgbdobject = RsBd(epgobject, tnFvBDName=bdobject.name)
                     fabricconfig.addMo(fkepgbdobject)
                     print(f"CREATED link between APP {appobject.name} and BD {bdobject.name}")
+                    added = added + 1
 
                 # Check VRF exists
                 vrf_name = thisrow['VRF-NEW']
                 if vrf_name in fabric_tenantvrfnames:
                     vrfobject = fabric_tenantvrfnames[vrf_name]
                     print(f"Found VRF: {vrfobject.name}")
+                    found = found + 1
                 else:
                     vrfobject = Ctx(tenantobj, name=vrf_name)
                     fabricconfig.addMo(vrfobject)
                     print(f"CREATED VRF: {vrfobject.name}")
+                    added = added + 1
 
                 # Check link with BD
                 fabric_bdfkbdvrfs = [x for x in fabric_allfkbdvrfs if str(x.dn) == str(bdobject.dn) + "/rsctx"]
@@ -199,10 +213,12 @@ for tenant in clean_tenant_list:
                 if str(vrfobject.name) in fabric_bdfkbdvrftnFvCtxNames:
                     fkvrfobject = fabric_bdfkbdvrftnFvCtxNames[vrfobject.name]
                     print(f"Found link between BD {bdobject.name} and VRF {vrfobject.name}")
+                    found = found + 1
                 else:
                     fkvrfobject = RsCtx(bdobject, tnFvCtxName=vrfobject.name)
                     fabricconfig.addMo(fkvrfobject)
                     print(f"CREATED link between BD {bdobject.name} and VRF {vrfobject.name}")
+                    added = added + 1
 
                 bd_tag_assoc[bdobject.name] = int(thisrow['Vlan ID'])
 
@@ -226,8 +242,15 @@ for tenant in clean_tenant_list:
 print("")
 print("")
 print("     --------------")
-print("Check previous logs. Apply? [Confirm]")
-moDir.commit(fabricconfig)
+
+if added > 0:
+    print(f"Found {found} objects")
+    print(f"About to create {added} objects")
+    print("")
+    input("Proceed? [Confirm]")
+    moDir.commit(fabricconfig)
+else:
+    print("No objects will be modified, skipping confirmation")    
 
 for tenant in alltenant:
     for application in tenant['app']:
