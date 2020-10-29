@@ -105,9 +105,8 @@ def find_path_po(moDir):
 
 def safe_string(string):
     unsafe_find = re.compile(r"[^a-zA-Z0-9_.-]")
-    for i in unsafe_find.findall(string):
-        safe_char = UNSAFE_CHARACTER_REPLACE.get(i, "")
-        string = string.replace(i, safe_char)
+    if len(unsafe_find.findall(string)) > 0:
+        raise SyntaxError("Invalid string "+string)
 
     return string
 
