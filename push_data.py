@@ -2,15 +2,17 @@ from copy import deepcopy
 import pickle
 import csv
 import urllib3
+from typing import Dict
 
 import pandas as pd
 from cobra.mit.access import MoDirectory
 from cobra.mit.session import LoginSession
-from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd, RsPathAtt
+from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd, RsPathAtt, Ctx, RsCtx
 from cobra.mit.request import ConfigRequest
 from cobra.model.infra import HPortS, RsAccBaseGrp
+from helpers.generic import safe_string
 
-
+import objects
 import acicreds
 import defaults
 import helpers.generic
@@ -42,7 +44,7 @@ networkdata = [x for x in networkdata if hasattr(x, "newname")]
 
 tenant_list = excel.Tenant.unique().tolist()
 # remove nan from list
-clean_tenant_list = [x for x in tenant_list if str(x) != 'nan']
+clean_tenant_list = [helpers.generic.safe_string(x) for x in tenant_list if str(x) != 'nan']
 
 
 # Init ACI session
@@ -71,40 +73,66 @@ fabric_allepgs = moDir.lookupByClass("fvAEPg")
 
 print("Get list of all BDs")
 fabric_allbds = moDir.lookupByClass("fvBD")
+fabric_bddict = {str(x.dn): x for x in fabric_allbds}
 
 print("Get list of all EPG-BD relationships")
-fabric_allfkbds = moDir.lookupByClass("fvRsBd")
+fabric_allfkepgbds = moDir.lookupByClass("fvRsBd")
+
+print("Get list of all VRFs")
+fabric_allvrfs = moDir.lookupByClass("fvCtx")
+fabric_vrfdict = {str(x.dn): x for x in fabric_allvrfs}
+
+print("Get list of all BD/VRF relationships")
+fabric_allfkbdvrfs = moDir.lookupByClass("fvRsCtx")
 
 
+# We will store the bd/VLAN id associations here
+bd_tag_assoc: Dict[str, int] = {}
+
+fabricconfig = ConfigRequest()
 for tenant in clean_tenant_list:
     if tenant in fabric_alltenantsdict:
         tenantobj = fabric_alltenantsdict[tenant]
+        print(f"Found Tenant: {tenantobj.name}")
     else:
         tenantobj = Tenant(uniMo, tenant)
+        fabricconfig.addMo(tenantobj)
+        print(f"CREATED Tenant: {tenantobj.name}")
 
     thistenant = excel.loc[excel['Tenant'] == tenant]
     app_list = thistenant.ANP.unique().tolist()
-    clean_app_list = [x for x in app_list if str(x) != 'nan']
+    clean_app_list = [helpers.generic.safe_string(x) for x in app_list if str(x) != 'nan']
     allapp = []
     all_tenant_bd = []
 
-    print(f"Get list of all Application Profiles inside tenant {tenantobj.name}")
     # Find all Application Profiles belonging to this tenant
     fabric_tenantapps = [x for x in fabric_allaps if x._BaseMo__parentDnStr == tenantobj.dn]
 
     # Get dict of tenants keyed by name so we can search them
     fabric_tenantappdict = {x.name: x for x in fabric_tenantapps}
 
+    # Get list of all VRFs in this tenant
+    fabric_tenantvrfs = [x for x in fabric_allvrfs if x._BaseMo__parentDnStr == tenantobj.dn]
+    fabric_tenantvrfnames = {x.name: x for x in fabric_tenantvrfs}
+    fabric_tenantvrfdns = {str(x.dn): x for x in fabric_tenantvrfs}
+
+    fabric_tenantbds = [x for x in fabric_allbds if x._BaseMo__parentDnStr == tenantobj.dn]
+    fabric_tenantbdnames = {x.name: x for x in fabric_tenantbds}
+    fabric_tenantbddns = {str(x.dn): x for x in fabric_tenantbds}
+
     for app in clean_app_list:
         if app in fabric_tenantappdict:
             appobject = fabric_tenantappdict[app]
+            print(f"Found Application profile: {appobject.name}")
         else:
             appobject = Ap(tenantobj, app)
+            fabricconfig.addMo(appobject)
+            print(f"CREATED Application profile: {appobject.name}")
 
         app_bd_list = []
         thisapp = thistenant.loc[thistenant['ANP'] == app]
         epg_list = thisapp.EPG.unique().tolist()
-        clean_epg_list = [x for x in epg_list if str(x) != 'nan']
+        clean_epg_list = [helpers.generic.safe_string(x) for x in epg_list if str(x) != 'nan']
         all_app_epg = []
 
         # Find all EPGs belonging to this Application Profile
@@ -116,105 +144,90 @@ for tenant in clean_tenant_list:
         for epg in clean_epg_list:
             if epg in fabric_appepgdict:
                 epgobject = fabric_appepgdict[epg]
+                print(f"Found EPG: {epgobject.name}")
             else:
                 epgobject = AEPg(appobject, epg)
+                fabricconfig.addMo(epgobject)
+                print(f"CREATED EPG: {epgobject.name}")
 
             thisepg = thisapp.loc[thisapp['EPG'] == epg]
             bd_list = thisepg.BD.unique().tolist()
-            clean_bd_list = [x for x in bd_list if str(x) != 'nan']
+            clean_bd_list = [helpers.generic.safe_string(x) for x in bd_list if str(x) != 'nan']
             assert len(clean_bd_list) == 1
 
-            # Find all RsBds belonging to this EPG, should be one or less
-            fabric_epgfkbds = [x for x in fabric_allfkbds if x._BaseMo__parentDnStr == epgobject.dn]
-            assert len(fabric_epgfkbds) <= 1
+            # Find all BD inside this EPG
+            fabric_epgfkepgbds = [x for x in fabric_allfkepgbds if x._BaseMo__parentDnStr == epgobject.dn]
+            fabric_epgfkepgbdtnFvBDNames = {x.tnFvBDName: x for x in fabric_epgfkepgbds}
+            fabric_epgfkepgbddns = {x.tDn: x for x in fabric_epgfkepgbds}
 
             for bd in clean_bd_list:
+                # Need to check both that the BD exists and that is it linked to the EPG
                 thisbd = thisepg.loc[thisepg['BD'] == bd]
                 thisrow = thisbd.iloc[0]
-                vrf = thisrow['VRF-NEW']
-                bddict = deepcopy(defaults.bd)
-                vlanid = int(thisrow['Vlan ID'])
+                # Check if BD exists
+                if bd in fabric_epgfkepgbdtnFvBDNames:
+                    bdobject = fabric_tenantbdnames[bd]
+                    print(f"Found BD: {bdobject.name}")
+                else:
+                    bdobject = BD(tenantobj, name=thisrow['BD'])
+                    fabricconfig.addMo(bdobject)
+                    print(f"CREATED BD: {bdobject.name}")
 
-                bddict.update({'name': helpers.generic.safe_string(bd),
-                               'vrf': vrf})
+                # Check link with EPG
+                if str(bdobject.dn) in fabric_epgfkepgbddns:
+                    fkepgbdobject = fabric_epgfkepgbddns[bdobject.dn]
+                    print(f"Found link between APP {appobject.name} and BD {bdobject.name}")
+                else:
+                    fkepgbdobject = RsBd(epgobject, tnFvBDName=bdobject.name)
+                    fabricconfig.addMo(fkepgbdobject)
+                    print(f"CREATED link between APP {appobject.name} and BD {bdobject.name}")
 
-                if isinstance(thisrow['netmask'], str):
-                    netmask = thisrow['netmask'].split('.')
-                    # Validate subnet mask
-                    for i in range(len(netmask)-1):
-                        try:
-                            assert netmask[i] >= netmask[i+1]
-                        except AssertionError:
-                            raise AssertionError(
-                                f"Invalid subnet format {thisrow['netmask']}")
+                # Check VRF exists
+                vrf_name = thisrow['VRF-NEW']
+                if vrf_name in fabric_tenantvrfnames:
+                    vrfobject = fabric_tenantvrfnames[vrf_name]
+                    print(f"Found VRF: {vrfobject.name}")
+                else:
+                    vrfobject = Ctx(tenantobj, name=vrf_name)
+                    fabricconfig.addMo(vrfobject)
+                    print(f"CREATED VRF: {vrfobject.name}")
 
-                    # Black magic from https://stackoverflow.com/questions/38085571/how-use-netaddr-to-convert-subnet-mask-to-cidr-in-python
-                    cidr = sum(bin(int(x)).count('1') for x in netmask)
-                    l3 = {'name': thisrow['ip_address'],
-                          'mask': cidr,
-                          'scope': 'public'}
+                # Check link with BD
+                fabric_bdfkbdvrfs = [x for x in fabric_allfkbdvrfs if str(x.dn) == str(bdobject.dn) + "/rsctx"]
+                fabric_bdfkbdvrftnFvCtxNames = {x.tnFvCtxName: x for x in fabric_bdfkbdvrfs}
 
-                bddict['subnet'].append(l3)
-                all_tenant_bd.append(bddict)
+                if str(vrfobject.name) in fabric_bdfkbdvrftnFvCtxNames:
+                    fkvrfobject = fabric_bdfkbdvrftnFvCtxNames[vrfobject.name]
+                    print(f"Found link between BD {bdobject.name} and VRF {vrfobject.name}")
+                else:
+                    fkvrfobject = RsCtx(bdobject, tnFvCtxName=vrfobject.name)
+                    fabricconfig.addMo(fkvrfobject)
+                    print(f"CREATED link between BD {bdobject.name} and VRF {vrfobject.name}")
 
-            epgdict = deepcopy(defaults.epg)
-            epgdict.update({'name': helpers.generic.safe_string(epg),
-                            'bd': bddict,
-                            'old_vlan_tag': vlanid})
-            all_app_epg.append(epgdict)
+                bd_tag_assoc[bdobject.name] = int(thisrow['Vlan ID'])
 
-            epgdict = deepcopy(defaults.epg)
-            epgdict.update({'name': helpers.generic.safe_string(epg),
-                            'bd': clean_bd_list[0]})
+                    # TODO: Add Subnets
+                    # if isinstance(thisrow['netmask'], str):
+                    #     netmask = thisrow['netmask'].split('.')
+                    #     # Validate subnet mask
+                    #     for i in range(len(netmask)-1):
+                    #         try:
+                    #             assert netmask[i] >= netmask[i+1]
+                    #         except AssertionError:
+                    #             raise AssertionError(
+                    #                 f"Invalid subnet format {thisrow['netmask']}")
 
-        appdict = deepcopy(defaults.app)
-        appdict.update({'name': helpers.generic.safe_string(app),
-                        'epg': all_app_epg})
-        allapp.append(appdict)
+                    #     # Black magic from https://stackoverflow.com/questions/38085571/how-use-netaddr-to-convert-subnet-mask-to-cidr-in-python
+                    #     cidr = sum(bin(int(x)).count('1') for x in netmask)
+                    #     l3 = {'name': thisrow['ip_address'],
+                    #           'mask': cidr,
+                    #           'scope': 'public'}
 
-    vrf_list = thistenant['VRF-NEW'].unique().tolist()
-    clean_vrf_list = [{'name': x} for x in vrf_list if str(x) != 'nan']
-
-    tenantdict = deepcopy(defaults.tenant)
-    tenantdict.update({'name': helpers.generic.safe_string(tenant),
-                       'app': allapp,
-                       'bd': all_tenant_bd,
-                       'vrf': clean_vrf_list})
-    alltenant.append(tenantdict)
-
-# alltenant now contains:
-# [{'app': [{'epg': [{'bd': {'name': 'ITO-APP_ENTERPRICE_A-GDC_BD',
-#                           'subnet': [{'mask': 24,
-#                                       'name': '172.22.90.254',
-#                                       'scope': 'public'}],
-#                           'vrf': 'VINTAGE-GDC_VRF'},
-#                    'contract': [],
-#                    'domain': [],
-#                    'name': 'ITO-APP_ENTERPRICE_A-GDC_EPG',
-#                    'old_vlan_tag': 93,
-#                    'static_path': []},
-#                   {'bd': {'name': 'ITO-APP_ENTERPRICE_B-GDC_BD',
-#                           'subnet': [{'mask': 24,
-#                                       'name': '172.22.91.254',
-#                                       'scope': 'public'}],
-#                           'vrf': 'VINTAGE-GDC_VRF'},
-#                    'contract': [],
-#                    'domain': [],
-#                    'name': 'ITO-APP_ENTERPRICE_B-GDC_EPG',
-#                    'old_vlan_tag': 94,
-#                    'static_path': []}],
-#           'name': 'VINTAGE-GDC_ANP'}],
-#  'bd': [{'name': 'ITO-APP_ENTERPRICE_A-GDC_BD',
-#          'subnet': [{'mask': 24, 'name': '172.22.90.254', 'scope': 'public'}],
-#          'vrf': 'VINTAGE-GDC_VRF'},
-#         {'name': 'ITO-APP_ENTERPRICE_B-GDC_BD',
-#          'subnet': [{'mask': 24, 'name': '172.22.91.254', 'scope': 'public'}],
-#          'vrf': 'VINTAGE-GDC_VRF'}],
-#  'contract': [],
-#  'description': '',
-#  'name': 'Antani',
-#  'protocol_policy': {},
-#  'vrf': [{'name': 'VINTAGE-GDC_VRF'}]}]
+print("")
+print("")
+print("     --------------")
+print("Check previous logs. Apply? [Confirm]")
+moDir.commit(fabricconfig)
 
 for tenant in alltenant:
     for application in tenant['app']:
