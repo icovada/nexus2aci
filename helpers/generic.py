@@ -17,7 +17,7 @@ def find_children(mo, moDir):
 
     return childdict
 
-def find_switch_profiles(moDir):
+def find_switch_profiles(moDir) -> dict:
     print("Get switch profiles")
     swprofiles = {}
 
