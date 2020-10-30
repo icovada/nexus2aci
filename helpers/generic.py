@@ -20,19 +20,24 @@ def find_children(mo, moDir):
 def find_switch_profiles(moDir):
     print("Get switch profiles")
     swprofiles = {}
+
+    print("Get all leaf profiles")
     leafswprofiles = moDir.lookupByClass("infraNodeP")
-    
+
+    print("Get all Leaf Selectors")
+    nodeblocks = moDir.lookupByClass("infraNodeBlk")
+
     for leafprof in leafswprofiles:
         print("Get leaf profile for", leafprof.dn)
+        # Path is infraNodeP/infraLeafS/infraNodeBlk so we
+        # have to associate blocks to sw profiles
         leaves = []
-        leafselectors = moDir.lookupByClass("infraNodeBlk", 
-                                            propFilter=f'wcard(infraNodeBlk.dn, "uni/infra/nprof-{leafprof.name}")')
+        leafselectors = [x for x in nodeblocks if str(leafprof.dn) in str(x.dn)]
         
         for selector in leafselectors:
             for i in range(int(selector.from_), int(selector.to_)+1):
                 if i not in leaves:
                     leaves.append(i)
-
 
         # Find interface selector for normal interfaces
         # port channels are infraHPortS
@@ -47,7 +52,7 @@ def find_switch_profiles(moDir):
         portselectors = {}
         for selector in accportselector:
             try:
-                dn = find_children(selector, moDir)["infraRsAccBaseGrp"][0].tDn.replace("uni/infra/funcprof/","")
+                dn = find_children(selector, moDir)["infraRsAccBaseGrp"][0].tDn.replace("uni/infra/funcprof/", "")
                 dashposition = dn.find("-")
                 accgrpname = dn[dashposition+1:]
                 portselectors[accgrpname] = selector
