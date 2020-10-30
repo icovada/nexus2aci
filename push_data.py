@@ -12,7 +12,7 @@ from cobra.mit.request import ConfigRequest
 from cobra.model.infra import HPortS, RsAccBaseGrp
 from helpers.generic import safe_string
 
-import objects
+from objects import Interface, PortChannel, Vpc
 import acicreds
 import defaults
 import helpers.generic
@@ -87,7 +87,7 @@ fabric_allfkbdvrfs = moDir.lookupByClass("fvRsCtx")
 
 
 # We will store the bd/VLAN id associations here
-bd_tag_assoc: Dict[str, int] = {}
+epg_tag_assoc: Dict[str, int] = {}
 
 found = 0
 added = 0
@@ -220,7 +220,7 @@ for tenant in clean_tenant_list:
                     print(f"CREATED link between BD {bdobject.name} and VRF {vrfobject.name}")
                     added = added + 1
 
-                bd_tag_assoc[bdobject.name] = int(thisrow['Vlan ID'])
+            epg_tag_assoc[epgobject.name] = int(thisrow['Vlan ID'])
 
                     # TODO: Add Subnets
                     # if isinstance(thisrow['netmask'], str):
@@ -252,163 +252,54 @@ if added > 0:
 else:
     print("No objects will be modified, skipping confirmation")    
 
-for tenant in alltenant:
-    for application in tenant['app']:
-        for epg in application['epg']:
-            for interface in networkdata:
-                if "newname" not in interface:
-                    # Do not lookup non-migrated interfaces
-                    continue
 
-                if "ismember" in interface:
-                    continue
-                try:
-                    if epg['old_vlan_tag'] in interface['allowed_vlan']:
-                        epg['static_path'].append({'interface': interface,
-                                                   'tag': True})
-                        print("Added static path %s in EPG %s", interface, epg['name'])
-                except KeyError:
-                    pass
+# Refresh credentials
+moDir.login()
 
-                try:
-                    if epg['old_vlan_tag'] == interface['native_vlan']:
-                        epg['static_path'].append({'interface': interface,
-                                                   'tag': False})
-                        print("Added static path %s in EPG %s", interface, epg['name'])
-                except KeyError:
-                    pass
-
-# alltenant now contains:
-# [{'app': [{'epg': [{'bd': {'name': 'ITO-APP_ENTERPRICE_A-GDC_BD',
-#                           'subnet': [{'mask': 24,
-#                                       'name': '172.22.90.254',
-#                                       'scope': 'public'}],
-#                           'vrf': 'VINTAGE-GDC_VRF'},
-#                    'contract': [],
-#                    'domain': [],
-#                    'name': 'ITO-APP_ENTERPRICE_A-GDC_EPG',
-#                    'old_vlan_tag': 93,
-#                    'static_path': [{'interface': {'description': 'SNSV00864_nic0_1',
-#                                                   'name': 'H3-4/1/Ethernet114/1/5',
-#                                                   'native_vlan': 93,
-#                                                   'newname': '101/1/1'},
-#                                     'tag': False}]},
-#                   {'bd': {'name': 'ITO-APP_ENTERPRICE_B-GDC_BD',
-#                           'subnet': [{'mask': 24,
-#                                       'name': '172.22.91.254',
-#                                       'scope': 'public'}],
-#                           'vrf': 'VINTAGE-GDC_VRF'},
-#                    'contract': [],
-#                    'domain': [],
-#                    'name': 'ITO-APP_ENTERPRICE_B-GDC_EPG',
-#                    'old_vlan_tag': 94,
-#                    'static_path': [{'interface': {'description': 'SNSV01048_nic0_1',
-#                                                   'name': 'H3-4/1/Ethernet114/1/7',
-#                                                   'native_vlan': 94,
-#                                                   'newname': '101/1/3'},
-#                                     'tag': False},
-#                                    {'interface': {'description': 'SNSV01202_nic0_1',
-#                                                   'name': 'H3-4/1/Ethernet114/1/9',
-#                                                   'native_vlan': 94,
-#                                                   'newname': '101/1/5'},
-#                                     'tag': False},
-#                                    {'interface': {'description': 'SNSV01255_nic0_1',
-#                                                   'name': 'H3-4/1/Ethernet114/1/11',
-#                                                   'native_vlan': 94,
-#                                                   'newname': '101/1/7'},
-#                                     'tag': False},
-#                                    {'interface': {'description': 'SNSV01257_nic0_1',
-#                                                   'name': 'H3-4/1/Ethernet114/1/12',
-#                                                   'native_vlan': 94,
-#                                                   'newname': '101/1/8'},
-#                                     'tag': False},
-#                                    {'interface': {'description': 'SNSV01261_nic0_1',
-#                                                   'name': 'H3-4/1/Ethernet114/1/13',
-#                                                   'native_vlan': 94,
-#                                                   'newname': '101/1/9'},
-#                                     'tag': False}]}],
-#           'name': 'VINTAGE-GDC_ANP'}],
-#  'bd': [{'name': 'ITO-APP_ENTERPRICE_A-GDC_BD',
-#          'subnet': [{'mask': 24, 'name': '172.22.90.254', 'scope': 'public'}],
-#          'vrf': 'VINTAGE-GDC_VRF'},
-#         {'name': 'ITO-APP_ENTERPRICE_B-GDC_BD',
-#          'subnet': [{'mask': 24, 'name': '172.22.91.254', 'scope': 'public'}],
-#          'vrf': 'VINTAGE-GDC_VRF'}],
-#  'contract': [],
-#  'description': '',
-#  'name': 'Antani',
-#  'protocol_policy': {},
-#  'vrf': [{'name': 'VINTAGE-GDC_VRF'}]}]
-
-
-tenantconfig = ConfigRequest()
-for tenant in alltenant:
-    fvTenant = Tenant(uniMo, tenant['name'])
-    tenant["aciobject"] = fvTenant
-    tenantconfig.addMo(fvTenant)
-
-    for app in tenant['app']:
-        fvApp = Ap(fvTenant, app['name'])
-        app["aciobject"] = fvApp
-        tenantconfig.addMo(fvApp)
-
-        for epg in app['epg']:
-            fvAEPg = AEPg(fvApp, epg['name'])
-            epg["aciobject"] = fvAEPg
-            tenantconfig.addMo(fvAEPg)
-
-            fvBD = BD(fvTenant, epg['bd']['name'])
-            epg['bd']['aciobject'] = fvBD
-            tenantconfig.addMo(fvBD)
-
-            bind = RsBd(fvAEPg, tnFvBDName=epg['bd']['name'])
-            tenantconfig.addMo(bind)
-
-print("Committing tenant info")
-moDir.commit(tenantconfig)
+print("Get list of all EPGs")
+fabric_allepgs = moDir.lookupByClass("fvAEPg")
 
 switch_profiles = helpers.generic.find_switch_profiles(moDir)
-
+found = 0
+added = 0
 # Create port-channels and vpc
 # add object in interface dict
 bundleparent = moDir.lookupByDn('uni/infra/funcprof')
 config = ConfigRequest()
 for interface in networkdata:
-    try:
-        if interface["ismember"]:
-            continue
-    except KeyError:
-        pass
-
-    if "newname" not in interface:
+    if interface.ismember:
         continue
 
-    if any([x in interface['name'] for x in ["port-channel", "vpc"]]):
+    if not hasattr(interface, "newname"):
+        continue
+
+    # If is PortChannel or Vpc
+    if type(interface) != Interface:
         # TODO: Check if it already exists
         bundle, lacp_pol = helpers.int.create_bundle_interface_polgrp(interface, bundleparent)
         config.addMo(bundle)
         config.addMo(lacp_pol)
 
         # Add members in policy group
-        if "port-channel" in interface['name']:
-            membernames = [x for x in interface['members']]
+        if type(interface) == PortChannel:
+            membernames = [x for x in interface.members]
         else:
             membernames = []
-            for intf in interface['members']:
-                membernames = membernames + intf['members']
+            for intf in interface.members:
+                membernames = membernames + intf.members
 
-        int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface['newname'])
+        int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface.newname)
         for intf in membernames:
-            if "newname" in intf:
+            if hasattr(intf, "newname"):
                 try:
-                    path = intf['newname'].split("/")
+                    path = intf.newname.split("/")
                     assert len(path) == 3
                 except KeyError:
                     continue
                 except AssertionError:
-                    raise AssertionError("Wrong interface name " + intf['newname'] + ", format 100/1/1")
+                    raise AssertionError("Wrong interface name " + intf.newname + ", format 100/1/1")
                 leaf = helpers.generic.leaf_str_to_tuple(path[0])
-                int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface['newname'])
+                int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface.newname)
                 try:
                     assert leaf in switch_profiles
                 except AssertionError:
@@ -416,24 +307,28 @@ for interface in networkdata:
                     raise AssertionError("No leaf profile for this interface")
 
                 try:
-                    interfaceselector = switch_profiles[leaf]['portselectors'][interface['newname']]
+                    interfaceselector = switch_profiles[leaf]['portselectors'][interface.newname]
+                    print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.newname}")
+                    found = found + 1
                 except KeyError:
                     # Create port selector
                     interfaceselector = HPortS(switch_profiles[leaf]['leafintprofile'], int_selector_name, "range")
                     switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
                     config.addMo(interfaceselector)
 
-                    accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface['newname'])
+                    accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface.newname)
                     config.addMo(interfaceselector)
                     config.addMo(accbasegrp)
+                    print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.newname}")
+                    added = added + 1
 
                 port_block = helpers.int.create_port_block(intf, interfaceselector)
                 config.addMo(port_block)
 
 
-    if "Ethernet" in interface['name']:
+    if type(interface) == Interface:
         try:
-            path = interface['newname'].split("/")
+            path = interface.newname.split("/")
             assert len(path) == 3
         except KeyError:
             continue
@@ -450,57 +345,106 @@ for interface in networkdata:
 
         try:
             interfaceselector = switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS]
+            print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.newname}")
+            found = found + 1
         except KeyError:
             # Create port selector
             interfaceselector = HPortS(switch_profiles[leaf]['leafintprofile'], int_selector_name, "range")
             switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
             config.addMo(interfaceselector)
 
+
             # Assign policy group to port selector
             accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accportgrp-" + defaults.POLICY_GROUP_ACCESS)
             config.addMo(interfaceselector)
             config.addMo(accbasegrp)
-
+            print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.newname}")
+            added = added + 1
 
         port_block = helpers.int.create_port_block(interface, interfaceselector)
         config.addMo(port_block)
 
     # save leaf pair in interface definition
-    interface['leaf'] = leaf
+    interface.leaf = leaf
 
-moDir.commit(config)
+print("")
+print("")
+print("     --------------")
+
+if added > 0:
+    print(f"Found {found} objects")
+    print(f"About to create {added} objects")
+    print("")
+    input("Proceed? [Confirm]")
+    moDir.commit(config)
+else:
+    print("No objects will be modified, skipping confirmation")    
 
 
+found = 0
+added = 0
+
+moDir.login()
 path_endpoints = helpers.generic.find_path_endpoints(moDir)
 path_vpc = helpers.generic.find_path_vpc(moDir)
 path_po = helpers.generic.find_path_po(moDir)
 # Create static paths
 config = ConfigRequest()
-for tenant in alltenant:
-    for app in tenant['app']:
-        for epg in app['epg']:
-            for path in epg['static_path']:
-                interface = path['interface']
-                if "newname" in interface:
-                    if "port-channel" in interface['name']:
-                        staticpath = RsPathAtt(epg['aciobject'], tDn=str(path_po[interface['newname']].dn))
-                    elif "vpc" in interface['name']:
-                        staticpath = RsPathAtt(epg['aciobject'], tDn=str(path_vpc[interface['newname']].dn))
-                    elif "Ethernet" in interface['name']:
-                        intpath = interface['newname'].split("/")
-                        PARENTPATH = str(path_endpoints[(int(intpath[0]),)].dn)
-                        pathexp_path = f"/pathep-[eth{str(intpath[1])}/{str(intpath[2])}]"
-                        staticpath = RsPathAtt(epg['aciobject'], tDn=PARENTPATH + pathexp_path)
-                    else:
-                        raise KeyError("Unknown interface type")
 
-                    if path['tag']:
+print("Get list of static ports")
+fabric_staticport = moDir.lookupByClass("fvRsPathAtt")
+fabric_staticportdn = {x.dn: x for x in fabric_staticport}
+
+for epg in fabric_allepgs:
+    for interface in networkdata:
+        if not interface.ismember:
+            if hasattr(interface, "newname"):
+                try:
+                    if epg_tag_assoc[epg.name] in interface.allowed_vlan:
+                        tag = True
+                    elif epg_tag_assoc[epg.name] == interface.native_vlan:
+                        tag= False
+                    else:
+                        continue
+                except KeyError:
+                    continue
+
+                if type(interface) == PortChannel:
+                    staticpath = RsPathAtt(epg, tDn=str(path_po[interface.newname].dn))
+                elif type(interface) == Vpc:
+                    staticpath = RsPathAtt(epg, tDn=str(path_vpc[interface.newname].dn))
+                elif type(interface) == Interface:
+                    intpath = interface.newname.split("/")
+                    PARENTPATH = str(path_endpoints[(int(intpath[0]),)].dn)
+                    pathexp_path = f"/pathep-[eth{str(intpath[1])}/{str(intpath[2])}]"
+                    staticpath = RsPathAtt(epg, tDn=PARENTPATH + pathexp_path)
+                else:
+                    raise KeyError("Unknown interface type")
+                
+                if staticpath.dn not in fabric_staticportdn:
+                    if tag:
                         staticpath.mode = "regular"
                     else:
                         staticpath.mode = "native"
-
+                
                     staticpath.instrImedcy = "immediate"
-                    staticpath.encap = "vlan-" + str(epg['old_vlan_tag'])
+                    staticpath.encap = "vlan-" + str(epg_tag_assoc[epg.name])
                     config.addMo(staticpath)
+                    added = added + 1
+                    print(f"Added Static Path {str(staticpath.dn)}")
+                else:
+                    found = found + 1
+                    print(f"FOUND Static Path {str(staticpath.dn)}")
 
-moDir.commit(config)
+print("")
+print("")
+print("     --------------")
+
+if added > 0:
+    print(f"Found {found} objects")
+    print(f"About to create {added} objects")
+    print("")
+    input("Proceed? [Confirm]")
+    moDir.commit(config)
+else:
+    print("No objects will be modified, skipping confirmation")    
