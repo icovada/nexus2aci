@@ -30,7 +30,7 @@ def create_bundle_interface_polgrp(interface, parent, *args, **kwargs):
     return bundle, lacp_pol
 
 
-def create_port_block(interface, portselector):
+def create_port_block(interface, interfaceselector):
     path = interface.newname.split("/")
 
     if "-" in path[2]:
@@ -39,8 +39,7 @@ def create_port_block(interface, portselector):
         fromPort = path[2]
         toPort = path[2]
 
-
-    block = PortBlk(portselector, 
+    block = PortBlk(interfaceselector, 
                     f"ethernet_{path[2]}",
                     descr=interface.description, 
                     fromCard=int(path[1]),
@@ -50,19 +49,20 @@ def create_port_block(interface, portselector):
 
     return block
 
-def get_port_blocks(moDir, switch_profiles, leaf_tuple):
+def check_port_block(port_block: PortBlk, switch_profiles: dict, fabric_allportblocks: list, leaf_tuple: tuple):
     """
     Find all port blocks inside all interface selectors in a leaf interface profile
-    for a leaf, across all leaf profiles 
+    for a leaf, across all leaf profiles, check input port block does not use
+    any of the already defined ports
     
     Parameters:
-    moDir (MoDirectory): MoDirectory(loginsession)
-    switch_profiles (dict): Output of helpers.generic.find_switch_profiles()
-    leafinterfaceprofile (str): Name of leaf interface profile
+    - port_block (PortBlk): PortBlk to check
+    - switch_profiles (dict): Output of helpers.generic.find_switch_profiles()
+    - fabric_allportblocks (list): List of all `infraPortBlk`
+    - leaf_tuple (tuple): Tuple of leaves to check
 
     Returns:
-    allports (dict): Dict of cards containing a set of all ports inside it
-                     {1: {1,2,3,4,5}}
+    - valid (bool): Whether the port block is valid or not
     """
 
     # Find all leaf profiles in which our leaves might be
@@ -72,21 +72,19 @@ def get_port_blocks(moDir, switch_profiles, leaf_tuple):
         newleaves = set(x for x in list(switch_profiles) if leaf in x)
         leafprofileids.update(newleaves)
 
-    allports = {}
     for ids in leafprofileids:
         leafintprofile = str(switch_profiles[ids]['leafintprofile'].dn)
 
         print("Get port blocks in", leafintprofile)
-        blocks = moDir.lookupByClass('infraPortBlk', parentDn=leafintprofile)
-        for block in blocks:
-            port_range = range(int(block.fromPort), int(block.toPort)+1)
-            card_range = range(int(block.fromCard), int(block.toCard)+1)
+        blocks = [x for x in fabric_allportblocks if leafintprofile in str(x.dn)
+                                                  and int(x.fromPort) <= port_block.fromPort
+                                                  and int(x.toPort) >= port_block.toPort
+                                                  and int(x.fromCard) <= port_block.fromCard
+                                                  and int(x.toCard) >= port_block.toCard]
 
-            for card in card_range:
-                if card not in allports:
-                    allports[card] = set()
-                for port in port_range:
-                    allports[card].add(port)
-
-    print("Used ports in leaf", leaf_tuple, ":", allports)
-    return allports
+    if len(blocks) > 0:
+        print("INVALID PORT BLOCK")
+        return False
+    else:
+        print("OK PORT BLOCK")
+        return True

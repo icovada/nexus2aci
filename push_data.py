@@ -11,6 +11,7 @@ from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd, RsPathAtt, Ctx, RsCtx
 from cobra.mit.request import ConfigRequest
 from cobra.model.infra import HPortS, RsAccBaseGrp
 from helpers.generic import safe_string
+from helpers.int import check_port_block
 
 from objects import Interface, PortChannel, Vpc
 import acicreds
@@ -267,7 +268,10 @@ moDir.login()
 print("Get list of all EPGs")
 fabric_allepgs = moDir.lookupByClass("fvAEPg")
 
-switch_profiles = helpers.generic.find_switch_profiles(moDir)
+print("Get list of all Port Blocks")
+fabric_allportblocks = list(moDir.lookupByClass("infraPortBlk"))
+
+switch_profiles: dict = helpers.generic.find_switch_profiles(moDir)
 found = 0
 added = 0
 
@@ -331,7 +335,8 @@ for interface in networkdata:
                     added = added + 1
 
                 port_block = helpers.int.create_port_block(member, interfaceselector)
-                config.addMo(port_block)
+                if check_port_block(port_block, switch_profiles, fabric_allportblocks, leaf):
+                    config.addMo(port_block)
 
 
     else:
@@ -406,6 +411,9 @@ config = ConfigRequest()
 print("Get list of static ports")
 fabric_staticport = moDir.lookupByClass("fvRsPathAtt")
 fabric_staticportdn = {x.dn: x for x in fabric_staticport}
+
+print("Get list of all Port Blocks")
+fabric_allportblocks = list(moDir.lookupByClass("infraPortBlk"))
 
 for epg in fabric_allepgs:
     for interface in networkdata:
