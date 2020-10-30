@@ -92,6 +92,10 @@ epg_tag_assoc: Dict[str, int] = {}
 found = 0
 added = 0
 
+####################################################
+# This section deals with Tenants, EPGs, BDs, VRFs #
+####################################################
+
 fabricconfig = ConfigRequest()
 for tenant in clean_tenant_list:
     if tenant in fabric_alltenantsdict:
@@ -253,6 +257,10 @@ else:
     print("No objects will be modified, skipping confirmation")    
 
 
+##################################################
+# This section deals with Fabric access policies #
+##################################################
+
 # Refresh credentials
 moDir.login()
 
@@ -262,6 +270,7 @@ fabric_allepgs = moDir.lookupByClass("fvAEPg")
 switch_profiles = helpers.generic.find_switch_profiles(moDir)
 found = 0
 added = 0
+
 # Create port-channels and vpc
 # add object in interface dict
 bundleparent = moDir.lookupByDn('uni/infra/funcprof')
@@ -380,6 +389,10 @@ if added > 0:
 else:
     print("No objects will be modified, skipping confirmation")    
 
+
+########################################
+# This section deals with static paths #
+########################################
 
 found = 0
 added = 0
