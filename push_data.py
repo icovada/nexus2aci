@@ -291,22 +291,21 @@ for interface in networkdata:
 
         # Add members in policy group
         if type(interface) == PortChannel:
-            membernames = [x for x in interface.members]
+            members = interface.members
         else:
-            membernames = []
+            members = []
             for intf in interface.members:
-                membernames = membernames + intf.members
+                members = members + intf.members
 
-        int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface.newname)
-        for intf in membernames:
-            if hasattr(intf, "newname"):
+        for member in members:
+            if hasattr(member, "newname"):
                 try:
-                    path = intf.newname.split("/")
+                    path = member.newname.split("/")
                     assert len(path) == 3
                 except KeyError:
                     continue
                 except AssertionError:
-                    raise AssertionError("Wrong interface name " + intf.newname + ", format 100/1/1")
+                    raise AssertionError("Wrong interface name " + member.newname + ", format 100/1/1")
                 leaf = helpers.generic.leaf_str_to_tuple(path[0])
                 int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface.newname)
                 try:
@@ -331,11 +330,11 @@ for interface in networkdata:
                     print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.newname}")
                     added = added + 1
 
-                port_block = helpers.int.create_port_block(intf, interfaceselector)
+                port_block = helpers.int.create_port_block(member, interfaceselector)
                 config.addMo(port_block)
 
 
-    if type(interface) == Interface:
+    else:
         try:
             path = interface.newname.split("/")
             assert len(path) == 3
