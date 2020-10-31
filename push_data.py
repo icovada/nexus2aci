@@ -337,6 +337,7 @@ for interface in networkdata:
                 port_block = helpers.int.create_port_block(member, interfaceselector)
                 if check_port_block(port_block, switch_profiles, fabric_allportblocks, leaf):
                     config.addMo(port_block)
+                    fabric_allportblocks.append(port_block)
 
 
     else:
