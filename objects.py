@@ -1,20 +1,21 @@
 from typing import List, Optional
 
-
 class Interface():
-
     def __init__(self, name: str):
         self.name: str = name
-        self.newname: Optional[str] = ""
         self.description: Optional[str]
         self.ismember: bool = False
         self.protocol: Optional[str]
         self.channel_group: Optional[int]
         self.native_vlan: int
         # TODO: Change to Set
-        self.allowed_vlan:Optional[List[int]] = []
-        self.cage:Optional[str]
-        self.switch:Optional[int]
+        self.allowed_vlan: List[int] = []
+        self.cage: Optional[str]
+        self.switch: Optional[int]
+        self._newname: Optional[str]
+        self.leaf = None
+        self.module = None
+        self.port = None
 
     def __str__(self) -> str:
         outname = self.name
@@ -35,6 +36,27 @@ class Interface():
             return False
         else:
             return True
+
+    def set_newname(self, newname: str):
+        self._newname = newname
+        leaf, card, port = newname.split("/")
+
+        if "," in leaf:
+            leafa, leafb = leaf.split(",")
+            self.leaf = (int(leafa), int(leafb))
+        else:
+            self.leaf = leaf
+
+        self.card = card
+
+        if "-" in port:
+            from_port, to_port = port.split("-")
+            self.port = range(int(from_port), int(to_port)+1)
+        else:
+            self.port = port
+
+    def get_newname(self):
+        return self._newname
 
 
 class PortChannel(Interface):
