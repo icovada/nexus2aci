@@ -1,16 +1,14 @@
-from copy import deepcopy
 import pickle
 import csv
-import urllib3
 from typing import Dict
 
+import urllib3
 import pandas as pd
 from cobra.mit.access import MoDirectory
 from cobra.mit.session import LoginSession
 from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd, RsPathAtt, Ctx, RsCtx
 from cobra.mit.request import ConfigRequest
 from cobra.model.infra import HPortS, RsAccBaseGrp
-from helpers.generic import safe_string
 from helpers.int import check_port_block
 
 from objects import Interface, PortChannel, Vpc
@@ -255,7 +253,7 @@ if added > 0:
     input("Proceed? [Confirm]")
     moDir.commit(fabricconfig)
 else:
-    print("No objects will be modified, skipping confirmation")    
+    print("No objects will be modified, skipping confirmation")
 
 
 ##################################################
@@ -392,7 +390,7 @@ if added > 0:
     input("Proceed? [Confirm]")
     moDir.commit(config)
 else:
-    print("No objects will be modified, skipping confirmation")    
+    print("No objects will be modified, skipping confirmation")
 
 
 ########################################
@@ -418,44 +416,43 @@ fabric_allportblocks = list(moDir.lookupByClass("infraPortBlk"))
 
 for epg in fabric_allepgs:
     for interface in networkdata:
-        if not interface.ismember:
-            if hasattr(interface, "newname"):
-                try:
-                    if epg_tag_assoc[epg.name] in interface.allowed_vlan:
-                        tag = True
-                    elif epg_tag_assoc[epg.name] == interface.native_vlan:
-                        tag= False
-                    else:
-                        continue
-                except KeyError:
+        if not interface.ismember and hasattr(interface, "newname"):
+            try:
+                if epg_tag_assoc[epg.name] in interface.allowed_vlan:
+                    tag = True
+                elif epg_tag_assoc[epg.name] == interface.native_vlan:
+                    tag = False
+                else:
                     continue
+            except KeyError:
+                continue
 
-                if type(interface) == PortChannel:
-                    staticpath = RsPathAtt(epg, tDn=str(path_po[interface.newname].dn))
-                elif type(interface) == Vpc:
-                    staticpath = RsPathAtt(epg, tDn=str(path_vpc[interface.newname].dn))
-                elif type(interface) == Interface:
-                    intpath = interface.newname.split("/")
-                    PARENTPATH = str(path_endpoints[(int(intpath[0]),)].dn)
-                    pathexp_path = f"/pathep-[eth{str(intpath[1])}/{str(intpath[2])}]"
-                    staticpath = RsPathAtt(epg, tDn=PARENTPATH + pathexp_path)
+            if type(interface) == PortChannel:
+                staticpath = RsPathAtt(epg, tDn=str(path_po[interface.newname].dn))
+            elif type(interface) == Vpc:
+                staticpath = RsPathAtt(epg, tDn=str(path_vpc[interface.newname].dn))
+            elif type(interface) == Interface:
+                intpath = interface.newname.split("/")
+                PARENTPATH = str(path_endpoints[(int(intpath[0]),)].dn)
+                pathexp_path = f"/pathep-[eth{str(intpath[1])}/{str(intpath[2])}]"
+                staticpath = RsPathAtt(epg, tDn=PARENTPATH + pathexp_path)
+            else:
+                raise KeyError("Unknown interface type")
+
+            if staticpath.dn not in fabric_staticportdn:
+                if tag:
+                    staticpath.mode = "regular"
                 else:
-                    raise KeyError("Unknown interface type")
-                
-                if staticpath.dn not in fabric_staticportdn:
-                    if tag:
-                        staticpath.mode = "regular"
-                    else:
-                        staticpath.mode = "native"
-                
-                    staticpath.instrImedcy = "immediate"
-                    staticpath.encap = "vlan-" + str(epg_tag_assoc[epg.name])
-                    config.addMo(staticpath)
-                    added = added + 1
-                    print(f"Added Static Path {str(staticpath.dn)}")
-                else:
-                    found = found + 1
-                    print(f"FOUND Static Path {str(staticpath.dn)}")
+                    staticpath.mode = "native"
+
+                staticpath.instrImedcy = "immediate"
+                staticpath.encap = "vlan-" + str(epg_tag_assoc[epg.name])
+                config.addMo(staticpath)
+                added = added + 1
+                print(f"Added Static Path {str(staticpath.dn)}")
+            else:
+                found = found + 1
+                print(f"FOUND Static Path {str(staticpath.dn)}")
 
 print("")
 print("")
@@ -468,4 +465,4 @@ if added > 0:
     input("Proceed? [Confirm]")
     moDir.commit(config)
 else:
-    print("No objects will be modified, skipping confirmation")    
+    print("No objects will be modified, skipping confirmation")
