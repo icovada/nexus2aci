@@ -12,7 +12,7 @@ def create_bundle_interface_polgrp(interface, parent, *args, **kwargs):
         raise KeyError("This shouldn't happen")
 
     bundle = AccBndlGrp(parent, interface.newname, lagT=lagT)
-    
+
     try:
         assert interface.protocol in policymappings.lacp_modes
         lacp = interface.protocol
@@ -39,7 +39,7 @@ def create_port_block(interface, interfaceselector):
         fromPort = path[2]
         toPort = path[2]
 
-    block = PortBlk(interfaceselector, 
+    block = PortBlk(interfaceselector,
                     f"ethernet_{path[2]}",
                     descr=interface.description, 
                     fromCard=int(path[1]),

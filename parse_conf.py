@@ -1,9 +1,8 @@
-from objects import PortChannel, Vpc
-import yaml
-from libs import parse_nexus_pair_l2
-from filelist import entiredc
 import csv
 import pickle
+from objects import PortChannel, Vpc
+from libs import parse_nexus_pair_l2
+from filelist import entiredc
 from helpers.generate_excel import generate_excel
 
 
@@ -22,9 +21,9 @@ for interface in parseddc:
 # Export interface names for renaming
 allintdata = []
 for i in parseddc:
-    if type(i) == PortChannel:
-        if i.ismember:
-            continue
+    # We don't care about port channels that are part of a vpc
+    if type(i) == PortChannel and i.ismember:
+        continue
     thisint = {"newname": "",
                "name": str(i),
                "description": i.description if hasattr(i, "description") else ""}
@@ -33,7 +32,7 @@ for i in parseddc:
 
 with open("intnames.csv", "w") as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=[
-                            "name", "description", "newname"])
+        "name", "description", "newname"])
     writer.writeheader()
     writer.writerows(allintdata)
 
