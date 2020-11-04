@@ -251,6 +251,7 @@ if added > 0:
     print(f"About to create {added} objects")
     print("")
     input("Proceed? [Confirm]")
+    moDir.login()
     moDir.commit(fabricconfig)
 else:
     print("No objects will be modified, skipping confirmation")
@@ -259,9 +260,6 @@ else:
 ##################################################
 # This section deals with Fabric access policies #
 ##################################################
-
-# Refresh credentials
-moDir.login()
 
 print("Get list of all EPGs")
 fabric_allepgs = moDir.lookupByClass("fvAEPg")
@@ -390,6 +388,7 @@ if added > 0:
     print(f"About to create {added} objects")
     print("")
     input("Proceed? [Confirm]")
+    moDir.login()
     moDir.commit(config)
 else:
     print("No objects will be modified, skipping confirmation")
@@ -402,7 +401,6 @@ else:
 found = 0
 added = 0
 
-moDir.login()
 path_endpoints = helpers.generic.find_path_endpoints(moDir)
 path_vpc = helpers.generic.find_path_vpc(moDir)
 path_po = helpers.generic.find_path_po(moDir)
@@ -465,6 +463,7 @@ if added > 0:
     print(f"About to create {added} objects")
     print("")
     input("Proceed? [Confirm]")
+    moDir.login()
     moDir.commit(config)
 else:
     print("No objects will be modified, skipping confirmation")
