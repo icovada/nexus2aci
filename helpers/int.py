@@ -13,17 +13,17 @@ def create_bundle_interface_polgrp(interface, parent, *args, **kwargs):
 
     bundle = AccBndlGrp(parent, interface.newname, lagT=lagT)
 
-    try:
-        assert interface.protocol in policymappings.lacp_modes
-        lacp = interface.protocol
-    except KeyError:
+    if hasattr(interface, "protocol"):
+        try:
+            assert interface.protocol in policymappings.lacp_modes
+            lacp = interface.protocol
+        except AssertionError:
+            # protocol value not in lacp_modes
+            raise AssertionError("Unknown protocol value " + str(interface.protocol) + ", set it in policymappings.lacp_modes")
+    else:
         # protocol not in interface
         lacp = "on"
-    except AssertionError:
-        # protocol value not in lacp_modes
-        raise AssertionError("Unknown protocol value " + str(interface.protocol) + ", set it in policymappings.lacp_modes")
-    finally:
-        lacp = policymappings.lacp_modes.get(lacp)
+    lacp = policymappings.lacp_modes.get(lacp)
 
     lacp_pol = RsLacpPol(bundle, tnLacpLagPolName=lacp)
 
@@ -72,6 +72,7 @@ def check_port_block(port_block: PortBlk, switch_profiles: dict, fabric_allportb
         newleaves = set(x for x in list(switch_profiles) if leaf in x)
         leafprofileids.update(newleaves)
 
+    allblocks = []
     for ids in leafprofileids:
         leafintprofile = str(switch_profiles[ids]['leafintprofile'].dn)
 
@@ -81,8 +82,9 @@ def check_port_block(port_block: PortBlk, switch_profiles: dict, fabric_allportb
                                                   and int(x.toPort) >= port_block.toPort
                                                   and int(x.fromCard) <= port_block.fromCard
                                                   and int(x.toCard) >= port_block.toCard]
+        allblocks = allblocks + blocks
 
-    if len(blocks) > 0:
+    if len(allblocks) > 0:
         print("INVALID PORT BLOCK")
         return False
     else:

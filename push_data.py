@@ -130,7 +130,7 @@ for tenant in clean_tenant_list:
     for app in clean_app_list:
         if app in fabric_tenantappdict:
             appobject = fabric_tenantappdict[app]
-            print(f"Found Application profile: {appobject.name}")
+            #print(f"Found Application profile: {appobject.name}")
             found = found + 1
         else:
             appobject = Ap(tenantobj, app)
@@ -153,7 +153,7 @@ for tenant in clean_tenant_list:
         for epg in clean_epg_list:
             if epg in fabric_appepgdict:
                 epgobject = fabric_appepgdict[epg]
-                print(f"Found EPG: {epgobject.name}")
+                #print(f"Found EPG: {epgobject.name}")
                 found = found + 1
             else:
                 epgobject = AEPg(appobject, epg)
@@ -178,7 +178,7 @@ for tenant in clean_tenant_list:
                 # Check if BD exists
                 if bd in fabric_epgfkepgbdtnFvBDNames:
                     bdobject = fabric_tenantbdnames[bd]
-                    print(f"Found BD: {bdobject.name}")
+                    #print(f"Found BD: {bdobject.name}")
                     found = found + 1
                 else:
                     bdobject = BD(tenantobj, name=thisrow['BD'])
@@ -189,7 +189,7 @@ for tenant in clean_tenant_list:
                 # Check link with EPG
                 if str(bdobject.dn) in fabric_epgfkepgbddns:
                     fkepgbdobject = fabric_epgfkepgbddns[bdobject.dn]
-                    print(f"Found link between APP {appobject.name} and BD {bdobject.name}")
+                    #print(f"Found link between APP {appobject.name} and BD {bdobject.name}")
                     found = found + 1
                 else:
                     fkepgbdobject = RsBd(epgobject, tnFvBDName=bdobject.name)
@@ -201,7 +201,7 @@ for tenant in clean_tenant_list:
                 vrf_name = thisrow['VRF-NEW']
                 if vrf_name in fabric_tenantvrfnames:
                     vrfobject = fabric_tenantvrfnames[vrf_name]
-                    print(f"Found VRF: {vrfobject.name}")
+                    #print(f"Found VRF: {vrfobject.name}")
                     found = found + 1
                 else:
                     vrfobject = Ctx(tenantobj, name=vrf_name)
@@ -215,7 +215,7 @@ for tenant in clean_tenant_list:
 
                 if str(vrfobject.name) in fabric_bdfkbdvrftnFvCtxNames:
                     fkvrfobject = fabric_bdfkbdvrftnFvCtxNames[vrfobject.name]
-                    print(f"Found link between BD {bdobject.name} and VRF {vrfobject.name}")
+                    #print(f"Found link between BD {bdobject.name} and VRF {vrfobject.name}")
                     found = found + 1
                 else:
                     fkvrfobject = RsCtx(bdobject, tnFvCtxName=vrfobject.name)
@@ -336,6 +336,8 @@ for interface in networkdata:
                 if check_port_block(port_block, switch_profiles, fabric_allportblocks, leaf):
                     config.addMo(port_block)
                     fabric_allportblocks.append(port_block)
+                else:
+                    raise AssertionError(f"Cannot add port block for {member.name}, {member.newname}, as it overlaps with another")
 
 
     else:
@@ -424,7 +426,7 @@ for epg in fabric_allepgs:
                     tag = False
                 else:
                     continue
-            except KeyError:
+            except (AttributeError, KeyError):
                 continue
 
             if type(interface) == PortChannel:
