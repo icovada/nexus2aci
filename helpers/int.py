@@ -90,3 +90,54 @@ def check_port_block(port_block: PortBlk, switch_profiles: dict, fabric_allportb
     else:
         print("OK PORT BLOCK")
         return True
+
+
+def compare_port_block(port_block: PortBlk, switch_profiles: dict, fabric_allportblocks: list, leaf_tuple: tuple):
+    """
+    Compare a new port block object to one coming from the fabric
+
+    Suggested to use only after getting True from check_port_block()
+    
+    Parameters:
+    - port_block (PortBlk): PortBlk to check
+    - switch_profiles (dict): Output of helpers.generic.find_switch_profiles()
+    - fabric_allportblocks (list): List of all `infraPortBlk`
+    - leaf_tuple (tuple): Tuple of leaves to check
+
+    Returns:
+    - valid (bool): Whether the port blocks are equal
+    """
+
+    # Find all leaf profiles in which our leaves might be
+    print("Find all leaf profiles in which leaf", leaf_tuple, "could be")
+    leafprofileids = set()
+    for leaf in leaf_tuple:
+        newleaves = set(x for x in list(switch_profiles) if leaf in x)
+        leafprofileids.update(newleaves)
+
+    allblocks = []
+    for ids in leafprofileids:
+        leafintprofile = str(switch_profiles[ids]['leafintprofile'].dn)
+
+        print("Get port blocks in", leafintprofile)
+        blocks = [x for x in fabric_allportblocks if leafintprofile in str(x.dn)
+                                                  and int(x.fromPort) <= port_block.fromPort
+                                                  and int(x.toPort) >= port_block.toPort
+                                                  and int(x.fromCard) <= port_block.fromCard
+                                                  and int(x.toCard) >= port_block.toCard]
+        allblocks = allblocks + blocks
+    
+
+    if len(allblocks) == 1:
+        oneblock = allblocks[0]
+        if (str(port_block._BaseMo__parentDn) == str(oneblock._BaseMo__parentDn)
+            and str(port_block.fromPort) == str(oneblock.fromPort)
+            and str(port_block.toPort) == str(oneblock.toPort)
+            and str(port_block.fromCard) == str(oneblock.fromCard)
+            and str(port_block.toCard) == str(oneblock.toCard)):
+
+            return True
+        else:
+            return False
+    else:
+        raise AssertionError("Wrong input, did you run this after getting True from check_port_block?")

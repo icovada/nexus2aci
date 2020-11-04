@@ -9,7 +9,7 @@ from cobra.mit.session import LoginSession
 from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd, RsPathAtt, Ctx, RsCtx
 from cobra.mit.request import ConfigRequest
 from cobra.model.infra import HPortS, RsAccBaseGrp
-from helpers.int import check_port_block
+from helpers.int import check_port_block, compare_port_block
 
 from objects import Interface, PortChannel, Vpc
 import acicreds
@@ -331,11 +331,17 @@ for interface in networkdata:
                     added = added + 1
 
                 port_block = helpers.int.create_port_block(member, interfaceselector)
+                # If port block does not exist
                 if check_port_block(port_block, switch_profiles, fabric_allportblocks, leaf):
                     config.addMo(port_block)
                     fabric_allportblocks.append(port_block)
                 else:
-                    raise AssertionError(f"Cannot add port block for {member.name}, {member.newname}, as it overlaps with another")
+                    # If it exists
+                    if compare_port_block(port_block, switch_profiles, fabric_allportblocks, leaf):
+                        # Do not add if equal
+                        continue
+                    else:
+                        raise AssertionError(f"Cannot add port block for {member.name}, {member.newname}, as it overlaps with another")
 
 
     else:
