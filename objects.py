@@ -17,6 +17,7 @@ class Interface():
         self.leaf = kwargs.get("leaf", None)
         self.card = kwargs.get("card", None)
         self.port = kwargs.get("port", None)
+        self.is_superseeded = False
 
     def __str__(self) -> str:
         outname = self.name
@@ -129,6 +130,10 @@ class PortChannel(Interface):
 
         newmembers = []
 
+        # Tag old interfaces as superseeded
+        for member in self.members:
+            member.is_superseeded = True
+
         for port_range in port_ranges:
             newint = Interface("generatedrange", leaf=self.leaf, card=1, port=port_range)
             newint.ismember = True
@@ -195,6 +200,8 @@ class Vpc(PortChannel):
                         aggport = Interface("generatedrange", leaf=(po1_leaf, po2_leaf), card=1, port=po1_member.port)
                         allinterfaces.append(aggport)
                         match_found = True
+                        po1_member.is_superseeded = True
+                        po2_member.is_superseeded = True
                         self.members[0].members.remove(po1_member)
                         self.members[1].members.remove(po2_member)
                         # Only one possible pair per run
@@ -204,7 +211,10 @@ class Vpc(PortChannel):
 
                 match_found = False
                 break
-            
+        
+        self.members[0].is_superseeded = True
+        self.members[1].is_superseeded = True
+        
         allinterfaces = allinterfaces + self.members[0].members + self.members[1].members
 
         self.members = allinterfaces
