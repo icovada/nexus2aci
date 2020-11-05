@@ -2,7 +2,7 @@ from typing import List, Optional
 import more_itertools as mit
 
 class Interface():
-    def __init__(self, name: str):
+    def __init__(self, name: str, **kwargs):
         self.name: str = name
         self.description: Optional[str]
         self.ismember: bool = False
@@ -14,9 +14,9 @@ class Interface():
         self.cage: Optional[str]
         self.switch: Optional[int]
         self._newname: str = ""
-        self.leaf = None
-        self.module = None
-        self.port = None
+        self.leaf = kwargs.get("leaf", None)
+        self.module = kwargs.get("module", None)
+        self.port = kwargs.get("port", None)
 
     def __str__(self) -> str:
         outname = self.name
