@@ -12,7 +12,7 @@ class Interface():
         self.allowed_vlan: List[int] = []
         self.cage: Optional[str]
         self.switch: Optional[int]
-        self._newname: Optional[str]
+        self._newname: str = ""
         self.leaf = None
         self.module = None
         self.port = None
