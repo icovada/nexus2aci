@@ -1,4 +1,5 @@
 from typing import List, Optional
+import more_itertools as mit
 
 class Interface():
     def __init__(self, name: str):
@@ -45,15 +46,15 @@ class Interface():
             leafa, leafb = leaf.split(",")
             self.leaf = (int(leafa), int(leafb))
         else:
-            self.leaf = leaf
+            self.leaf = (leaf,)
 
-        self.card = card
+        self.card = int(card)
 
         if "-" in port:
             from_port, to_port = port.split("-")
             self.port = range(int(from_port), int(to_port)+1)
         else:
-            self.port = port
+            self.port = range(int(port), int(port)+1)
 
     def get_newname(self):
         return self._newname
@@ -88,7 +89,6 @@ class PortChannel(Interface):
 
     def inherit(self):
         for member in self.members:
-
             for vlan in member.allowed_vlan:
                 if vlan not in self.allowed_vlan:
                     self.allowed_vlan_add([vlan, ])
@@ -108,8 +108,27 @@ class PortChannel(Interface):
 
             member.ismember = True
 
+            self.leaf = member.leaf
+
     def set_newname(self, newname: str):
         self._newname = newname
+
+    def find_groups(self):
+        po_allports = []
+        for member in self.members:
+            po_allports = po_allports + [x for x in member.port]
+        
+        # Black magic from https://stackoverflow.com/questions/2154249/identify-groups-of-continuous-numbers-in-a-list/47642650
+        port_ranges: List[range] = []
+        for group in mit.consecutive_groups(po_allports):
+            group = list(group)
+            if len(group) == 1:
+                port_ranges.append(range(group[0], group[0]+1))
+            else:
+                port_ranges.append(range(group[0], group[-1]))
+
+        return port_ranges
+
 
     def check_members(self):
         leavesset = set()
