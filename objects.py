@@ -58,6 +58,12 @@ class Interface():
     def get_newname(self):
         return self._newname
 
+    def has_newname(self):
+        if hasattr(self, "_newname"):
+            return True
+        else:
+            return False
+
 
 class PortChannel(Interface):
 
@@ -101,6 +107,9 @@ class PortChannel(Interface):
                 self.description = member.description
 
             member.ismember = True
+
+    def set_newname(self, newname: str):
+        self._newname = newname
 
 
 class Vpc(PortChannel):

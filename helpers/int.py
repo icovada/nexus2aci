@@ -84,9 +84,11 @@ def check_port_block(port_block: PortBlk, switch_profiles: dict, fabric_allportb
                                                   and int(x.toCard) >= port_block.toCard]
         allblocks = allblocks + blocks
 
-    if len(allblocks) > 0:
+    if len(allblocks) == 1:
         print("INVALID PORT BLOCK")
         return False
+    elif len(allblocks) > 1:
+        raise AssertionError(f"Port block {port_block.fromPort} to {port_block.toPort}, parent {str(port_block._BaseMo__parentDn)} overlaps with another block")
     else:
         print("OK PORT BLOCK")
         return True
@@ -140,4 +142,4 @@ def compare_port_block(port_block: PortBlk, switch_profiles: dict, fabric_allpor
         else:
             return False
     else:
-        raise AssertionError("Wrong input, did you run this after getting True from check_port_block?")
+        raise AssertionError(f"Something went wrong. I found {len(allblocks)} port blocks")
