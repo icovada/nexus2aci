@@ -15,7 +15,7 @@ class Interface():
         self.switch: Optional[int]
         self._newname: str = ""
         self.leaf = kwargs.get("leaf", None)
-        self.module = kwargs.get("module", None)
+        self.card = kwargs.get("card", None)
         self.port = kwargs.get("port", None)
 
     def __str__(self) -> str:
@@ -127,7 +127,15 @@ class PortChannel(Interface):
             else:
                 port_ranges.append(range(group[0], group[-1]))
 
-        return port_ranges
+        newmembers = []
+
+        for port_range in port_ranges:
+            newint = Interface("generatedrange", leaf=self.leaf, card=1, port=port_range)
+            newint.ismember = True
+            newint._newname = "generated"
+            newmembers.append(newint)
+
+        self.members = newmembers
 
 
     def check_members(self):
