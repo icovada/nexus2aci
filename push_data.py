@@ -43,10 +43,12 @@ networkdata = [x for x in networkdata if x.has_newname()]
 
 # Aggregate port channel interfaces
 for x in [x for x in networkdata if type(x) == PortChannel]:
+    x.inherit()
     x.check_members()
     x.find_groups()
 
 for x in [x for x in networkdata if type(x) == Vpc]:
+    x.inherit()
     x.check_members()
     x.find_groups()
 
