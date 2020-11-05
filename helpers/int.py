@@ -11,7 +11,7 @@ def create_bundle_interface_polgrp(interface, parent, *args, **kwargs):
     else:
         raise KeyError("This shouldn't happen")
 
-    bundle = AccBndlGrp(parent, interface.newname, lagT=lagT)
+    bundle = AccBndlGrp(parent, interface.get_newname(), lagT=lagT)
 
     if hasattr(interface, "protocol"):
         try:
