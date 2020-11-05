@@ -61,10 +61,10 @@ class Interface():
         return self._newname
 
     def has_newname(self):
-        if hasattr(self, "_newname"):
-            return True
-        else:
+        if self._newname == "":
             return False
+        else:
+            return True
 
 
 class PortChannel(Interface):
