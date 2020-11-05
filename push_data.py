@@ -34,12 +34,12 @@ with open("intnames.csv", "r") as csvfile:
             try:
                 if str(interface) == row['name']:
                     if row['newname'] != "":
-                        interface.newname = row['newname']
+                        interface.set_newname = row['newname']
                     break
             except KeyError:
                 pass
 
-networkdata = [x for x in networkdata if hasattr(x, "newname")]
+networkdata = [x for x in networkdata if x.has_newname()]
 
 tenant_list = excel.Tenant.unique().tolist()
 # remove nan from list
@@ -298,16 +298,9 @@ for interface in networkdata:
                 members = members + intf.members
 
         for member in members:
-            if hasattr(member, "newname"):
-                try:
-                    path = member.newname.split("/")
-                    assert len(path) == 3
-                except KeyError:
-                    continue
-                except AssertionError:
-                    raise AssertionError("Wrong interface name " + member.newname + ", format 100/1/1")
-                leaf = helpers.generic.leaf_str_to_tuple(path[0])
-                int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface.newname)
+            if member.has_newname():
+                leaf = helpers.generic.leaf_str_to_tuple(interface.leaf)
+                int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface.get_newname)
                 try:
                     assert leaf in switch_profiles
                 except AssertionError:
@@ -315,8 +308,8 @@ for interface in networkdata:
                     raise AssertionError("No leaf profile for this interface")
 
                 try:
-                    interfaceselector = switch_profiles[leaf]['portselectors'][interface.newname]
-                    print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.newname}")
+                    interfaceselector = switch_profiles[leaf]['portselectors'][interface.get_newname]
+                    print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.get_newname}")
                     found = found + 1
                 except KeyError:
                     # Create port selector
@@ -324,10 +317,10 @@ for interface in networkdata:
                     switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
                     config.addMo(interfaceselector)
 
-                    accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface.newname)
+                    accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface.get_newname)
                     config.addMo(interfaceselector)
                     config.addMo(accbasegrp)
-                    print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.newname}")
+                    print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.get_newname}")
                     added = added + 1
 
                 port_block = helpers.int.create_port_block(member, interfaceselector)
@@ -341,19 +334,11 @@ for interface in networkdata:
                         # Do not add if equal
                         continue
                     else:
-                        raise AssertionError(f"Cannot add port block for {member.name}, {member.newname}, as it overlaps with another")
+                        raise AssertionError(f"Cannot add port block for {member.name}, {member.get_newname}, as it overlaps with another")
 
 
     else:
-        try:
-            path = interface.newname.split("/")
-            assert len(path) == 3
-        except KeyError:
-            continue
-        except AssertionError:
-            raise AssertionError("Wrong interface name " + interface['newname'] + ", format 100/1/1")
-
-        leaf = helpers.generic.leaf_str_to_tuple(path[0])
+        leaf = helpers.generic.leaf_str_to_tuple(interface.leaf)
         int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(defaults.POLICY_GROUP_ACCESS)
         try:
             assert leaf in switch_profiles
@@ -363,7 +348,7 @@ for interface in networkdata:
 
         try:
             interfaceselector = switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS]
-            print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.newname}")
+            print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.get_newname}")
             found = found + 1
         except KeyError:
             # Create port selector
@@ -376,7 +361,7 @@ for interface in networkdata:
             accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accportgrp-" + defaults.POLICY_GROUP_ACCESS)
             config.addMo(interfaceselector)
             config.addMo(accbasegrp)
-            print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.newname}")
+            print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.get_newname}")
             added = added + 1
 
         port_block = helpers.int.create_port_block(interface, interfaceselector)
