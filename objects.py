@@ -117,7 +117,8 @@ class PortChannel(Interface):
     def find_groups(self):
         po_allports = []
         for member in self.members:
-            po_allports = po_allports + [x for x in member.port]
+            if member.has_newname():
+                po_allports = po_allports + [x for x in member.port]
         
         # Black magic from https://stackoverflow.com/questions/2154249/identify-groups-of-continuous-numbers-in-a-list/47642650
         port_ranges: List[range] = []
@@ -153,7 +154,7 @@ class PortChannel(Interface):
         if len(leavesset) == 0:
             return None
         if len(leavesset) > 1:
-            raise ValueError(f"One of the members of {self.name} is not on the same leaf as others")
+            raise ValueError(f"One of the members of {self.name} is not on the same leaf as others: {[str(x) for x in self.members]}")
         else:
             return leavesset.pop()
 
@@ -214,7 +215,7 @@ class Vpc(PortChannel):
         
         self.members[0].is_superseeded = True
         self.members[1].is_superseeded = True
-        
+
         allinterfaces = allinterfaces + self.members[0].members + self.members[1].members
 
         self.members = allinterfaces
