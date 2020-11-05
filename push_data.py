@@ -34,12 +34,29 @@ with open("intnames.csv", "r") as csvfile:
             try:
                 if str(interface) == row['name']:
                     if row['newname'] != "":
-                        interface.set_newname = row['newname']
+                        interface.set_newname(row['newname'])
                     break
             except KeyError:
                 pass
 
 networkdata = [x for x in networkdata if x.has_newname()]
+
+# Aggregate port channel interfaces
+for x in [x for x in networkdata if type(x) == PortChannel]:
+    x.check_members()
+    x.find_groups()
+
+for x in [x for x in networkdata if type(x) == Vpc]:
+    x.check_members()
+    x.find_groups()
+
+# Add new interfaces of Po and Vpc to interface pool
+for x in [x for x in networkdata if isinstance(x, PortChannel)]:
+    networkdata = networkdata + x.members
+
+# Shed interfaces that have been aggregated
+networkdata = [x for x in networkdata if not x.is_superseeded]
+
 
 tenant_list = excel.Tenant.unique().tolist()
 # remove nan from list
