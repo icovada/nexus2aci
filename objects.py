@@ -180,3 +180,32 @@ class Vpc(PortChannel):
         if len(leavesset) != 2:
             raise ValueError(f"{self.name} does not span exactly two leaves")
 
+
+    def find_groups(self):
+        po1_leaf = self.members[0].leaf
+        po2_leaf = self.members[1].leaf
+
+        allinterfaces = []
+        match_found = True
+        # Cycle through all pairs of interfaces, remove them as found, continue until no pairs are left
+        while match_found:
+            for po1_member in [x for x in self.members[0].members]:
+                for po2_member in [x for x in self.members[1].members]:
+                    if po1_member.port == po2_member.port:
+                        aggport = Interface("generatedrange", leaf=(po1_leaf, po2_leaf), card=1, port=po1_member.port)
+                        allinterfaces.append(aggport)
+                        match_found = True
+                        self.members[0].members.remove(po1_member)
+                        self.members[1].members.remove(po2_member)
+                        # Only one possible pair per run
+                        break
+                    else:
+                        match_found = False
+
+                match_found = False
+                break
+            
+        allinterfaces = allinterfaces + self.members[0].members + self.members[1].members
+
+        self.members = allinterfaces
+
