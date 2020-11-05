@@ -111,6 +111,21 @@ class PortChannel(Interface):
     def set_newname(self, newname: str):
         self._newname = newname
 
+    def check_members(self):
+        leavesset = set()
+        if self.is_useful():
+            for member in self.members:
+                if member.has_newname():
+                    leavesset.add(member.leaf)
+        
+        if len(leavesset) == 0:
+            return None
+        if len(leavesset) > 1:
+            raise ValueError(f"One of the members of {self.name} is not on the same leaf as others")
+        else:
+            return leavesset.pop()
+
+
 
 class Vpc(PortChannel):
     def __init__(self, vpcid: int):
@@ -126,3 +141,15 @@ class Vpc(PortChannel):
             outname = self.cage + "/" + outname
 
         return outname
+
+    def check_members(self):
+        leavesset = set()
+        if len(self.members) != 2:
+            raise ValueError(f"{self.name} does not have exactly two members")
+        for member in self.members:
+            memberleaf = member.check_members()
+            leavesset.add(memberleaf)
+        
+        if len(leavesset) != 2:
+            raise ValueError(f"{self.name} does not span exactly two leaves")
+
