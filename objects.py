@@ -42,7 +42,7 @@ class Interface():
     def set_newname(self, newname: str, **kwargs):
         leaf = kwargs.get("leaf", None)
         card = kwargs.get("card", None)
-        port = kwargs.get("card", None)
+        port = kwargs.get("port", None)
 
         self._newname = newname
         
