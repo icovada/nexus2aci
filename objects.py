@@ -90,26 +90,27 @@ class PortChannel(Interface):
 
     def inherit(self):
         for member in self.members:
-            for vlan in member.allowed_vlan:
-                if vlan not in self.allowed_vlan:
-                    self.allowed_vlan_add([vlan, ])
-
-            if not hasattr(self, "native_vlan"):
-                self.native_vlan = member.native_vlan
-            else:
-                assert self.native_vlan == member.native_vlan
-
-            if not hasattr(self, "protocol"):
-                self.protocol = member.protocol
-            else:
-                assert self.protocol == member.protocol
-
-            if not hasattr(self, "description"):
-                self.description = member.description
-
-            member.ismember = True
-
-            self.leaf = member.leaf
+            if member.has_newname():
+                for vlan in member.allowed_vlan:
+                    if vlan not in self.allowed_vlan:
+                        self.allowed_vlan_add([vlan, ])
+    
+                if not hasattr(self, "native_vlan"):
+                    self.native_vlan = member.native_vlan
+                else:
+                    assert self.native_vlan == member.native_vlan
+    
+                if not hasattr(self, "protocol"):
+                    self.protocol = member.protocol
+                else:
+                    assert self.protocol == member.protocol
+    
+                if not hasattr(self, "description"):
+                    self.description = member.description
+    
+                member.ismember = True
+    
+                self.leaf = member.leaf
 
     def set_newname(self, newname: str):
         self._newname = newname
@@ -119,7 +120,7 @@ class PortChannel(Interface):
         for member in self.members:
             if member.has_newname():
                 po_allports = po_allports + [x for x in member.port]
-        
+
         # Black magic from https://stackoverflow.com/questions/2154249/identify-groups-of-continuous-numbers-in-a-list/47642650
         port_ranges: List[range] = []
         for group in mit.consecutive_groups(po_allports):
@@ -150,7 +151,7 @@ class PortChannel(Interface):
             for member in self.members:
                 if member.has_newname():
                     leavesset.add(member.leaf)
-        
+
         if len(leavesset) == 0:
             return None
         if len(leavesset) > 1:
@@ -182,7 +183,7 @@ class Vpc(PortChannel):
         for member in self.members:
             memberleaf = member.check_members()
             leavesset.add(memberleaf)
-        
+
         if len(leavesset) != 2:
             raise ValueError(f"{self.name} does not span exactly two leaves")
 
@@ -212,7 +213,7 @@ class Vpc(PortChannel):
 
                 match_found = False
                 break
-        
+
         self.members[0].is_superseeded = True
         self.members[1].is_superseeded = True
 
