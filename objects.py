@@ -58,7 +58,19 @@ class Interface():
             self.port = range(int(port), int(port)+1)
 
     def get_newname(self):
-        return self._newname
+        if len(self.leaf) == 1:
+            leaf = str(self.leaf[0])
+        else:
+            leaf = "(" + str(self.leaf[0]) + "," + str(self.leaf[1]) + ")"
+
+        card = str(self.card)
+
+        if len(self.port) == 1:
+            port = str(self.port[0])
+        else:
+            port = str(self.port[0]) + "-" + str(self.port[-1])
+
+        return leaf + "/" + card + "/" + port
 
     def has_newname(self):
         if self._newname == "":
@@ -114,6 +126,9 @@ class PortChannel(Interface):
 
     def set_newname(self, newname: str):
         self._newname = newname
+
+    def get_newname(self):
+        return self._newname
 
     def find_groups(self):
         po_allports = []
