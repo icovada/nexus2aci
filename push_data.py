@@ -59,7 +59,6 @@ for x in [x for x in networkdata if isinstance(x, PortChannel)]:
 # Shed interfaces that have been aggregated
 networkdata = [x for x in networkdata if not x.is_superseeded]
 
-
 tenant_list = excel.Tenant.unique().tolist()
 # remove nan from list
 clean_tenant_list = [helpers.generic.safe_string(x) for x in tenant_list if str(x) != 'nan']
@@ -298,62 +297,59 @@ for interface in networkdata:
     if interface.ismember:
         continue
 
-    if not hasattr(interface, "newname"):
+    if not interface.has_newname():
         continue
 
-    # If is PortChannel or Vpc
-    if type(interface) != Interface:
+    if type(interface) == Interface:
+        leaf = helpers.generic.leaf_str_to_tuple(interface.leaf)
+        int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(defaults.POLICY_GROUP_ACCESS)
+        intloop = [interface]
+    else:
         # TODO: Check if it already exists
         bundle, lacp_pol = helpers.int.create_bundle_interface_polgrp(interface, bundleparent)
         config.addMo(bundle)
         config.addMo(lacp_pol)
 
         # Add members in policy group
-        if type(interface) == PortChannel:
-            members = interface.members
-        else:
-            members = []
-            for intf in interface.members:
-                members = members + intf.members
+        intloop = interface.members
 
-        for member in members:
-            if member.has_newname():
-                leaf = helpers.generic.leaf_str_to_tuple(interface.leaf)
-                int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface.get_newname)
-                try:
-                    assert leaf in switch_profiles
-                except AssertionError:
-                    # TODO: Create leaf_profile and interface selector profile
-                    raise AssertionError("No leaf profile for this interface")
+    for member in intloop:
+        if member.has_newname():
+            int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface.get_newname())
+            try:
+                assert member.leaf in switch_profiles
+            except AssertionError:
+                # TODO: Create leaf_profile and interface selector profile
+                raise AssertionError("No leaf profile for this interface")
 
-                try:
-                    interfaceselector = switch_profiles[leaf]['portselectors'][interface.get_newname]
-                    print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.get_newname}")
-                    found = found + 1
-                except KeyError:
-                    # Create port selector
-                    interfaceselector = HPortS(switch_profiles[leaf]['leafintprofile'], int_selector_name, "range")
-                    switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
-                    config.addMo(interfaceselector)
+            try:
+                interfaceselector = switch_profiles[interface.leaf]['portselectors'][interface.get_newname()]
+                print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.get_newname()}")
+                found = found + 1
+            except KeyError:
+                # Create port selector
+                interfaceselector = HPortS(switch_profiles[interface.leaf]['leafintprofile'], int_selector_name, "range")
+                switch_profiles[interface.leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
+                config.addMo(interfaceselector)
 
-                    accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface.get_newname)
-                    config.addMo(interfaceselector)
-                    config.addMo(accbasegrp)
-                    print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.get_newname}")
-                    added = added + 1
+                accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface.get_newname())
+                config.addMo(interfaceselector)
+                config.addMo(accbasegrp)
+                print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.get_newname}")
+                added = added + 1
 
-                port_block = helpers.int.create_port_block(member, interfaceselector)
-                # If port block does not exist
-                if check_port_block(port_block, switch_profiles, fabric_allportblocks, leaf):
-                    config.addMo(port_block)
-                    fabric_allportblocks.append(port_block)
+            port_block = helpers.int.create_port_block(member, interfaceselector)
+            # If port block does not exist
+            if check_port_block(port_block, switch_profiles, fabric_allportblocks, interface.leaf):
+                config.addMo(port_block)
+                fabric_allportblocks.append(port_block)
+            else:
+                # If it exists
+                if compare_port_block(port_block, switch_profiles, fabric_allportblocks, interface.leaf):
+                    # Do not add if equal
+                    continue
                 else:
-                    # If it exists
-                    if compare_port_block(port_block, switch_profiles, fabric_allportblocks, leaf):
-                        # Do not add if equal
-                        continue
-                    else:
-                        raise AssertionError(f"Cannot add port block for {member.name}, {member.get_newname}, as it overlaps with another")
+                    raise AssertionError(f"Cannot add port block for {member.name}, {member.get_newname}, as it overlaps with another")
 
 
     else:
