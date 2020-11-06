@@ -301,11 +301,11 @@ for interface in networkdata:
         continue
 
     if type(interface) == Interface:
-        leaf = helpers.generic.leaf_str_to_tuple(interface.leaf)
         int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(defaults.POLICY_GROUP_ACCESS)
         intloop = [interface]
     else:
         # TODO: Check if it already exists
+        int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface.get_newname())
         bundle, lacp_pol = helpers.int.create_bundle_interface_polgrp(interface, bundleparent)
         config.addMo(bundle)
         config.addMo(lacp_pol)
@@ -315,7 +315,6 @@ for interface in networkdata:
 
     for member in intloop:
         if member.has_newname():
-            int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(interface.get_newname())
             try:
                 assert member.leaf in switch_profiles
             except AssertionError:
@@ -332,10 +331,14 @@ for interface in networkdata:
                 switch_profiles[interface.leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
                 config.addMo(interfaceselector)
 
-                accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface.get_newname())
-                config.addMo(interfaceselector)
+                if isinstance(interface, PortChannel):
+                    accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface.get_newname())
+                else:
+                    accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accportgrp-" + defaults.POLICY_GROUP_ACCESS)                
+                    config.addMo(interfaceselector)
                 config.addMo(accbasegrp)
                 print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.get_newname}")
+                
                 added = added + 1
 
             port_block = helpers.int.create_port_block(member, interfaceselector)
@@ -351,39 +354,6 @@ for interface in networkdata:
                 else:
                     raise AssertionError(f"Cannot add port block for {member.name}, {member.get_newname}, as it overlaps with another")
 
-
-    else:
-        leaf = helpers.generic.leaf_str_to_tuple(interface.leaf)
-        int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(defaults.POLICY_GROUP_ACCESS)
-        try:
-            assert leaf in switch_profiles
-        except AssertionError:
-            # TODO: Create leaf_profile and interface selector profile
-            raise AssertionError("No leaf profile for this interface")
-
-        try:
-            interfaceselector = switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS]
-            print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.get_newname}")
-            found = found + 1
-        except KeyError:
-            # Create port selector
-            interfaceselector = HPortS(switch_profiles[leaf]['leafintprofile'], int_selector_name, "range")
-            switch_profiles[leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
-            config.addMo(interfaceselector)
-
-
-            # Assign policy group to port selector
-            accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accportgrp-" + defaults.POLICY_GROUP_ACCESS)
-            config.addMo(interfaceselector)
-            config.addMo(accbasegrp)
-            print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.get_newname}")
-            added = added + 1
-
-        port_block = helpers.int.create_port_block(interface, interfaceselector)
-        config.addMo(port_block)
-
-    # save leaf pair in interface definition
-    interface.leaf = leaf
 
 print("")
 print("")
