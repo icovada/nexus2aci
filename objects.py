@@ -154,7 +154,7 @@ class PortChannel(Interface):
         for port_range in port_ranges:
             newint = Interface("generatedrange", leaf=self.leaf, card=1, port=port_range)
             newint.ismember = True
-            newint._newname = "generated"
+            newint.set_newname("generated")
             newint.description = self._newname
             newmembers.append(newint)
 
@@ -216,6 +216,9 @@ class Vpc(PortChannel):
                 for po2_member in [x for x in self.members[1].members]:
                     if po1_member.port == po2_member.port:
                         aggport = Interface("generatedrange", leaf=(po1_leaf, po2_leaf), card=1, port=po1_member.port)
+                        aggport.ismember = True
+                        aggport.set_newname("generated")
+                        aggport.description = self._newname
                         allinterfaces.append(aggport)
                         match_found = True
                         po1_member.is_superseeded = True
