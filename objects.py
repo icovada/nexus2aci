@@ -155,6 +155,7 @@ class PortChannel(Interface):
             newint = Interface("generatedrange", leaf=self.leaf, card=1, port=port_range)
             newint.ismember = True
             newint._newname = "generated"
+            newint.description = self._newname
             newmembers.append(newint)
 
         self.members = newmembers
