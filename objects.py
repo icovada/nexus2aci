@@ -39,23 +39,33 @@ class Interface():
         else:
             return True
 
-    def set_newname(self, newname: str):
+    def set_newname(self, newname: str, **kwargs):
+        leaf = kwargs.get("leaf", None)
+        card = kwargs.get("card", None)
+        port = kwargs.get("card", None)
+
         self._newname = newname
-        leaf, card, port = newname.split("/")
-
-        if "," in leaf:
-            leafa, leafb = leaf.split(",")
-            self.leaf = (int(leafa), int(leafb))
+        
+        if leaf is not None and card is not None and port is not None:
+            self.leaf = leaf
+            self.card = card
+            self.port = port
         else:
-            self.leaf = (int(leaf),)
-
-        self.card = int(card)
-
-        if "-" in port:
-            from_port, to_port = port.split("-")
-            self.port = range(int(from_port), int(to_port)+1)
-        else:
-            self.port = range(int(port), int(port)+1)
+            leaf, card, port = newname.split("/")
+    
+            if "," in leaf:
+                leafa, leafb = leaf.split(",")
+                self.leaf = (int(leafa), int(leafb))
+            else:
+                self.leaf = (int(leaf),)
+    
+            self.card = int(card)
+    
+            if "-" in port:
+                from_port, to_port = port.split("-")
+                self.port = range(int(from_port), int(to_port)+1)
+            else:
+                self.port = range(int(port), int(port)+1)
 
     def get_newname(self):
         if len(self.leaf) == 1:
