@@ -47,7 +47,7 @@ class Interface():
             leafa, leafb = leaf.split(",")
             self.leaf = (int(leafa), int(leafb))
         else:
-            self.leaf = (leaf,)
+            self.leaf = (int(leaf),)
 
         self.card = int(card)
 
