@@ -322,7 +322,10 @@ for interface in networkdata:
                 raise AssertionError("No leaf profile for this interface")
 
             try:
-                interfaceselector = switch_profiles[interface.leaf]['portselectors'][interface.get_newname()]
+                if isinstance(interface, PortChannel):
+                    interfaceselector = switch_profiles[interface.leaf]['portselectors'][interface.get_newname()]
+                else:
+                    interfaceselector = switch_profiles[interface.leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS]
                 print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.get_newname()}")
                 found = found + 1
             except KeyError:
@@ -335,7 +338,6 @@ for interface in networkdata:
                     accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface.get_newname())
                 else:
                     accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accportgrp-" + defaults.POLICY_GROUP_ACCESS)                
-                    config.addMo(interfaceselector)
                 config.addMo(accbasegrp)
                 print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.get_newname}")
                 
@@ -392,7 +394,7 @@ fabric_allportblocks = list(moDir.lookupByClass("infraPortBlk"))
 
 for epg in fabric_allepgs:
     for interface in networkdata:
-        if not interface.ismember and hasattr(interface, "newname"):
+        if not interface.ismember and interface.has_newname():
             try:
                 if epg_tag_assoc[epg.name] in interface.allowed_vlan:
                     tag = True
@@ -403,14 +405,16 @@ for epg in fabric_allepgs:
             except (AttributeError, KeyError):
                 continue
 
+            # Need a path for every interface in case of a range
             if type(interface) == PortChannel:
-                staticpath = RsPathAtt(epg, tDn=str(path_po[interface.newname].dn))
+                staticpath = RsPathAtt(epg, tDn=str(path_po[interface.get_newname()].dn))
             elif type(interface) == Vpc:
-                staticpath = RsPathAtt(epg, tDn=str(path_vpc[interface.newname].dn))
+                staticpath = RsPathAtt(epg, tDn=str(path_vpc[interface.get_newname()].dn))
             elif type(interface) == Interface:
-                intpath = interface.newname.split("/")
-                PARENTPATH = str(path_endpoints[(int(intpath[0]),)].dn)
-                pathexp_path = f"/pathep-[eth{str(intpath[1])}/{str(intpath[2])}]"
+                assert len(interface.leaf) == 1
+                assert len(interface.port) == 1
+                PARENTPATH = str(path_endpoints[interface.leaf].dn)
+                pathexp_path = f"/pathep-[eth{interface.card}/{interface.port[0]}]"
                 staticpath = RsPathAtt(epg, tDn=PARENTPATH + pathexp_path)
             else:
                 raise KeyError("Unknown interface type")
