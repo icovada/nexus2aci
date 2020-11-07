@@ -231,7 +231,7 @@ class Vpc(PortChannel):
                     if po1_member.port == po2_member.port:
                         aggport = Interface("generatedrange")
                         aggport.ismember = True
-                        aggport.set_newname("generated", leaf=(po1_leaf, po2_leaf), card=1, port=po1_member.port)
+                        aggport.set_newname("generated", leaf=(po1_leaf[0], po2_leaf[0]), card=1, port=po1_member.port)
                         aggport.description = self._newname
                         allinterfaces.append(aggport)
                         match_found = True
