@@ -11,6 +11,7 @@ class Interface():
         self.native_vlan: int
         # TODO: Change to Set
         self.allowed_vlan: List[int] = []
+        self.native_vlan: Optional[int]
         self.cage: Optional[str]
         self.switch: Optional[int]
         self._newname: str = ""
