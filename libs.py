@@ -242,10 +242,6 @@ def match_port_channel(one_nexus_config: list) -> list:
                             po_int.cage = eth_int.cage
                             po_int.switch = eth_int.switch
                             eth_int.ismember = True
-    
-    for i in one_nexus_config:
-        if not i.is_useful():
-            one_nexus_config.remove(i)
 
     return one_nexus_config
 
@@ -267,12 +263,14 @@ def match_vpc(sw1:list, sw2:list) -> list:
             # Create vpc object, add pointer to interface in members
             thisvpc = Vpc(po1.vpc)
             thisvpc.members.append(po1)
+            po1.ismember = True
             thisvpc.cage = po1.cage
             # Find other vpc member in second switch
             for po2 in [x for x in sw2 if type(x) == PortChannel]:
                 if hasattr(po2, "vpc"):
                     if po2.vpc == thisvpc.vpcid:
                         thisvpc.members.append(po2)
+                        po2.ismember = True
                         break
 
             # Some VPC might only have one member
