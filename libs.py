@@ -217,7 +217,7 @@ def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
 
     for interface in thisswitch:
         # Remove interfaces with only names
-        if not interface.is_useful():
+        if len(interface.allowed_vlan) == 0 and not hasattr(interface, "native_vlan"):
             thisswitch.remove(interface)
 
     return thisswitch
