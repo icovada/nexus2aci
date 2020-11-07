@@ -323,15 +323,15 @@ for interface in networkdata:
 
             try:
                 if isinstance(interface, PortChannel):
-                    interfaceselector = switch_profiles[interface.leaf]['portselectors'][interface.get_newname()]
+                    interfaceselector = switch_profiles[member.leaf]['portselectors'][interface.get_newname()]
                 else:
-                    interfaceselector = switch_profiles[interface.leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS]
+                    interfaceselector = switch_profiles[member.leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS]
                 print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.get_newname()}")
                 found = found + 1
             except KeyError:
                 # Create port selector
-                interfaceselector = HPortS(switch_profiles[interface.leaf]['leafintprofile'], int_selector_name, "range")
-                switch_profiles[interface.leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
+                interfaceselector = HPortS(switch_profiles[member.leaf]['leafintprofile'], int_selector_name, "range")
+                switch_profiles[member.leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
                 config.addMo(interfaceselector)
 
                 if isinstance(interface, PortChannel):
@@ -345,12 +345,12 @@ for interface in networkdata:
 
             port_block = helpers.int.create_port_block(member, interfaceselector)
             # If port block does not exist
-            if check_port_block(port_block, switch_profiles, fabric_allportblocks, interface.leaf):
+            if check_port_block(port_block, switch_profiles, fabric_allportblocks, member.leaf):
                 config.addMo(port_block)
                 fabric_allportblocks.append(port_block)
             else:
                 # If it exists
-                if compare_port_block(port_block, switch_profiles, fabric_allportblocks, interface.leaf):
+                if compare_port_block(port_block, switch_profiles, fabric_allportblocks, member.leaf):
                     # Do not add if equal
                     continue
                 else:
