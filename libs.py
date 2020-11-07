@@ -264,6 +264,7 @@ def match_vpc(sw1:list, sw2:list) -> list:
             thisvpc = Vpc(po1.vpc)
             thisvpc.members.append(po1)
             po1.ismember = True
+            po1.set_newname(f"member of {str(thisvpc)}")
             thisvpc.cage = po1.cage
             # Find other vpc member in second switch
             for po2 in [x for x in sw2 if type(x) == PortChannel]:
@@ -271,6 +272,7 @@ def match_vpc(sw1:list, sw2:list) -> list:
                     if po2.vpc == thisvpc.vpcid:
                         thisvpc.members.append(po2)
                         po2.ismember = True
+                        po2.set_newname(f"member of {str(thisvpc)}")
                         break
 
             # Some VPC might only have one member
