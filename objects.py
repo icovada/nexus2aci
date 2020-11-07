@@ -118,18 +118,21 @@ class PortChannel(Interface):
                     if vlan not in self.allowed_vlan:
                         self.allowed_vlan_add([vlan, ])
     
-                if not hasattr(self, "native_vlan"):
-                    self.native_vlan = member.native_vlan
-                else:
-                    assert self.native_vlan == member.native_vlan
+                if hasattr(member, "native_vlan"):
+                    if not hasattr(self, "native_vlan"):
+                        self.native_vlan = member.native_vlan
+                    else:
+                        assert self.native_vlan == member.native_vlan
+
+                if hasattr(member, "protocol"):
+                    if not hasattr(self, "protocol"):
+                        self.protocol = member.protocol
+                    else:
+                        assert self.protocol == member.protocol
     
-                if not hasattr(self, "protocol"):
-                    self.protocol = member.protocol
-                else:
-                    assert self.protocol == member.protocol
-    
-                if not hasattr(self, "description"):
-                    self.description = member.description
+                if hasattr(member, "description"):
+                    if not hasattr(self, "description"):
+                        self.description = member.description
     
                 member.ismember = True
     
