@@ -1,6 +1,7 @@
 from typing import List, Optional
 import more_itertools as mit
 
+
 class Interface():
     def __init__(self, name: str, **kwargs):
         self.name: str = name
@@ -8,7 +9,6 @@ class Interface():
         self.ismember: bool = False
         self.protocol: Optional[str]
         self.channel_group: Optional[int]
-        self.native_vlan: int
         # TODO: Change to Set
         self.allowed_vlan: List[int] = []
         self.native_vlan: Optional[int]
@@ -46,18 +46,18 @@ class Interface():
         port = kwargs.get("port", None)
 
         self._newname = newname
-        
+
         if leaf is not None and card is not None and port is not None:
             self.leaf = leaf
             self.card = card
             self.port = port
         else:
             leaf, card, port = newname.split("/")
-    
+
             self.leaf = (int(leaf),)
-    
+
             self.card = int(card)
-    
+
             if "-" in port:
                 from_port, to_port = port.split("-")
                 self.port = range(int(from_port), int(to_port)+1)
@@ -66,7 +66,7 @@ class Interface():
 
     def get_newname(self):
         leaf = str(self.leaf[0])
-        
+
         card = str(self.card)
 
         if len(self.port) == 1:
@@ -110,7 +110,7 @@ class PortChannel(Interface):
                 for vlan in member.allowed_vlan:
                     if vlan not in self.allowed_vlan:
                         self.allowed_vlan_add([vlan, ])
-    
+
                 if hasattr(member, "native_vlan"):
                     if not hasattr(self, "native_vlan"):
                         self.native_vlan = member.native_vlan
@@ -122,13 +122,13 @@ class PortChannel(Interface):
                         self.protocol = member.protocol
                     else:
                         assert self.protocol == member.protocol
-    
+
                 if hasattr(member, "description"):
                     if not hasattr(self, "description"):
                         self.description = member.description
-    
+
                 member.ismember = True
-    
+
                 self.leaf = member.leaf
 
     def set_newname(self, newname: str):
@@ -161,12 +161,12 @@ class PortChannel(Interface):
         for port_range in port_ranges:
             newint = Interface("generatedrange")
             newint.ismember = True
-            newint.set_newname("generated", leaf=self.leaf, card=1, port=port_range)
+            newint.set_newname("generated", leaf=self.leaf,
+                               card=1, port=port_range)
             newint.description = self._newname
             newmembers.append(newint)
 
         self.members = newmembers
-
 
     def check_members(self):
         leavesset = set()
@@ -178,10 +178,10 @@ class PortChannel(Interface):
         if len(leavesset) == 0:
             return None
         if len(leavesset) > 1:
-            raise ValueError(f"One of the members of {self.name} is not on the same leaf as others: {[str(x) for x in self.members]}")
+            raise ValueError(
+                f"One of the members of {self.name} is not on the same leaf as others: {[str(x) for x in self.members]}")
         else:
             return leavesset.pop()
-
 
 
 class Vpc(PortChannel):
@@ -210,7 +210,6 @@ class Vpc(PortChannel):
         if len(leavesset) != 2:
             raise ValueError(f"{self.name} does not span exactly two leaves")
 
-
     def find_groups(self):
         po1_leaf = self.members[0].leaf
         po2_leaf = self.members[1].leaf
@@ -224,7 +223,8 @@ class Vpc(PortChannel):
                     if po1_member.port == po2_member.port:
                         aggport = Interface("generatedrange")
                         aggport.ismember = True
-                        aggport.set_newname("generated", leaf=(po1_leaf[0], po2_leaf[0]), card=1, port=po1_member.port)
+                        aggport.set_newname("generated", leaf=(
+                            po1_leaf[0], po2_leaf[0]), card=1, port=po1_member.port)
                         aggport.description = self._newname
                         allinterfaces.append(aggport)
                         match_found = True
@@ -243,7 +243,7 @@ class Vpc(PortChannel):
         self.members[0].is_superseeded = True
         self.members[1].is_superseeded = True
 
-        allinterfaces = allinterfaces + self.members[0].members + self.members[1].members
+        allinterfaces = allinterfaces + \
+            self.members[0].members + self.members[1].members
 
         self.members = allinterfaces
-
