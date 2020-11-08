@@ -211,7 +211,7 @@ def parse_switched_interface(interfaces: list, l2dict: dict = None) -> list:
             if isinstance(thisint, PortChannel):
                 thisint.vpc = int(vpc_id)
             else:
-                AssertionError("Invalid vPC tag inside ethernet interface")
+                raise AssertionError("Invalid vPC tag inside ethernet interface")
 
         thisswitch.append(thisint)
 
