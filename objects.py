@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import more_itertools as mit
 
 
@@ -15,10 +15,10 @@ class Interface():
         self.cage: Optional[str]
         self.switch: Optional[int]
         self._newname: str = ""
-        self.leaf = kwargs.get("leaf", None)
-        self.card = kwargs.get("card", None)
-        self.port = kwargs.get("port", None)
-        self.is_superseeded = False
+        self.leaf: Tuple[int] = kwargs.get("leaf", None)
+        self.card: int = kwargs.get("card", None)
+        self.port: range = kwargs.get("port", None)
+        self.is_superseeded: bool = False
 
     def __str__(self) -> str:
         outname = self.name
@@ -131,7 +131,7 @@ class PortChannel(Interface):
 
                 self.leaf = member.leaf
 
-    def set_newname(self, newname: str):
+    def set_newname(self, newname: str, **kwargs):
         self._newname = newname
 
     def get_newname(self):
