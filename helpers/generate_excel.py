@@ -1,3 +1,4 @@
+from typing import Optional, Dict
 import ciscoconfparse
 import yaml
 from libs import parse_svi, parse_vlan_l2
@@ -28,7 +29,7 @@ def generate_excel():
             return step2
 
     def tenant(rowdict):
-        pass
+        return ""
 
     parsedconfs = []
 
@@ -36,11 +37,11 @@ def generate_excel():
         for i in v:
             parsedconfs.append(ciscoconfparse.CiscoConfParse(i))
 
-    l2dict = None
+    l2dict: Optional[Dict[int, Dict[str, str]]] = None
     for i in parsedconfs:
         l2dict = parse_vlan_l2(i, l2dict)
 
-    l3dict = l2dict
+    l3dict: Dict[int, Dict[str, str]] = l2dict
     for i in parsedconfs:
         l3dict = parse_svi(i, l3dict)
 
