@@ -1,7 +1,6 @@
 import re
 
 from cobra.mit.request import DnQuery
-from cobra.mit.access import MoDirectory
 
 def find_children(mo, moDir):
     print("Get children of", mo.dn)
@@ -90,8 +89,8 @@ def find_path_endpoints(moDir):
 
 def find_path_vpc(moDir):
     vpcs = {}
-    filter = 'and(not(wcard(fabricPathEp.dn,"__ui_")),and(eq(fabricPathEp.lagT,"node"),wcard(fabricPathEp.dn,"^topology/pod-[\d]*/protpaths-")))'
-    vpc_paths = moDir.lookupByClass("fabricPathEp", propFilter=filter)
+    propfilter = 'and(not(wcard(fabricPathEp.dn,"__ui_")),and(eq(fabricPathEp.lagT,"node"),wcard(fabricPathEp.dn,"^topology/pod-[\d]*/protpaths-")))'
+    vpc_paths = moDir.lookupByClass("fabricPathEp", propFilter=propfilter)
 
     for path in vpc_paths:
         vpcs[path.name] = path
@@ -101,8 +100,8 @@ def find_path_vpc(moDir):
 
 def find_path_po(moDir):
     pos = {}
-    filter = 'and(not(wcard(fabricPathEp.dn,"__ui_")),eq(fabricPathEp.lagT,"link"))'
-    po_paths = moDir.lookupByClass("fabricPathEp", propFilter=filter)
+    propfilter = 'and(not(wcard(fabricPathEp.dn,"__ui_")),eq(fabricPathEp.lagT,"link"))'
+    po_paths = moDir.lookupByClass("fabricPathEp", propFilter=propfilter)
 
     for path in po_paths:
         pos[path.name] = path
@@ -123,5 +122,5 @@ def leaf_str_to_tuple(leafs):
         leaves = (int(leafarr[0]), int(leafarr[1]))
     else:
         leaves = (int(leafs),)
-    
+
     return leaves
