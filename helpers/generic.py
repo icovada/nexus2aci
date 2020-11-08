@@ -1,6 +1,7 @@
-from cobra.mit.request import DnQuery
 import re
-from defaults import UNSAFE_CHARACTER_REPLACE
+
+from cobra.mit.request import DnQuery
+from cobra.mit.access import MoDirectory
 
 def find_children(mo, moDir):
     print("Get children of", mo.dn)
