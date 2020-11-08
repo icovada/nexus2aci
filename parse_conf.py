@@ -33,7 +33,7 @@ for i in parseddc:
                    "vpc": "",
                    "portchannel": "",
                    "name": str(i),
-                   "description": i.description if hasattr(i, "description") else ""}
+                   "description": i.description if i.description is not None else ""}
         allintdata.append(thisint)
 
     if type(i) == PortChannel and not i.ismember:
@@ -42,7 +42,7 @@ for i in parseddc:
                        "vpc": "",
                        "portchannel": str(i),
                        "name": str(member),
-                       "description": member.description if hasattr(member, "description") else ""}
+                       "description": member.description if member.description is not None else ""}
             allintdata.append(thisint)
 
     elif type(i) == Vpc:
@@ -52,7 +52,7 @@ for i in parseddc:
                            "vpc": str(i),
                            "portchannel": str(pomember),
                            "name": str(member),
-                           "description": member.description if hasattr(member, "description") else ""}
+                           "description": member.description if member.description is not None else ""}
                 allintdata.append(thisint)
     
 

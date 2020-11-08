@@ -5,13 +5,13 @@ import more_itertools as mit
 class Interface():
     def __init__(self, name: str, **kwargs):
         self.name: str = name
-        self.description: Optional[str]
+        self.description: Optional[str] = None
         self.ismember: bool = False
-        self.protocol: Optional[str]
+        self.protocol: Optional[str] = None
         self.channel_group: Optional[int]
         # TODO: Change to Set
         self.allowed_vlan: List[int] = []
-        self.native_vlan: Optional[int]
+        self.native_vlan: Optional[int] = None
         self.cage: Optional[str]
         self.switch: Optional[int]
         self._newname: str = ""
@@ -111,21 +111,29 @@ class PortChannel(Interface):
                     if vlan not in self.allowed_vlan:
                         self.allowed_vlan_add([vlan, ])
 
-                if hasattr(member, "native_vlan"):
-                    if not hasattr(self, "native_vlan"):
+                if self.native_vlan is None:
+                    try:
                         self.native_vlan = member.native_vlan
-                    else:
-                        assert self.native_vlan == member.native_vlan
+                    except AttributeError:
+                        pass
+                else:
+                    try:
+                        self.native_vlan = member.native_vlan
+                    except AttributeError:
+                        pass
+                    assert self.native_vlan == member.native_vlan
 
-                if hasattr(member, "protocol"):
-                    if not hasattr(self, "protocol"):
+                if self.protocol is None:
+                    try:
                         self.protocol = member.protocol
-                    else:
-                        assert self.protocol == member.protocol
+                    except AttributeError:
+                        pass
 
-                if hasattr(member, "description"):
-                    if not hasattr(self, "description"):
+                if self.description is None:
+                    try:
                         self.description = member.description
+                    except AttributeError:
+                        pass
 
                 member.ismember = True
 
