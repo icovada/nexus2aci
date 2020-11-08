@@ -131,17 +131,17 @@ for tenant in clean_tenant_list:
     all_tenant_bd = []
 
     # Find all Application Profiles belonging to this tenant
-    fabric_tenantapps = [x for x in fabric_allaps if x._BaseMo__parentDnStr == tenantobj.dn]
+    fabric_tenantapps = [x for x in fabric_allaps if x.parentDn == tenantobj.dn]
 
     # Get dict of tenants keyed by name so we can search them
     fabric_tenantappdict = {x.name: x for x in fabric_tenantapps}
 
     # Get list of all VRFs in this tenant
-    fabric_tenantvrfs = [x for x in fabric_allvrfs if x._BaseMo__parentDnStr == tenantobj.dn]
+    fabric_tenantvrfs = [x for x in fabric_allvrfs if x.parentDn == tenantobj.dn]
     fabric_tenantvrfnames = {x.name: x for x in fabric_tenantvrfs}
     fabric_tenantvrfdns = {str(x.dn): x for x in fabric_tenantvrfs}
 
-    fabric_tenantbds = [x for x in fabric_allbds if x._BaseMo__parentDnStr == tenantobj.dn]
+    fabric_tenantbds = [x for x in fabric_allbds if x.parentDn == tenantobj.dn]
     fabric_tenantbdnames = {x.name: x for x in fabric_tenantbds}
     fabric_tenantbddns = {str(x.dn): x for x in fabric_tenantbds}
 
@@ -163,7 +163,7 @@ for tenant in clean_tenant_list:
         all_app_epg = []
 
         # Find all EPGs belonging to this Application Profile
-        fabric_appepgs = [x for x in fabric_allepgs if x._BaseMo__parentDnStr == appobject.dn]
+        fabric_appepgs = [x for x in fabric_allepgs if x.parentDn == appobject.dn]
 
         # Get dict of EPGs by name so we can search them
         fabric_appepgdict = {x.name: x for x in fabric_appepgs}
@@ -185,7 +185,7 @@ for tenant in clean_tenant_list:
             assert len(clean_bd_list) == 1
 
             # Find all BD inside this EPG
-            fabric_epgfkepgbds = [x for x in fabric_allfkepgbds if x._BaseMo__parentDnStr == epgobject.dn]
+            fabric_epgfkepgbds = [x for x in fabric_allfkepgbds if x.parentDn == epgobject.dn]
             fabric_epgfkepgbdtnFvBDNames = {x.tnFvBDName: x for x in fabric_epgfkepgbds}
             fabric_epgfkepgbddns = {x.tDn: x for x in fabric_epgfkepgbds}
 
