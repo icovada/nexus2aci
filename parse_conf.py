@@ -21,19 +21,22 @@ for interface in parseddc:
 # Export interface names for renaming
 allintdata = []
 for i in parseddc:
-    # We don't care about port channels that are part of a vpc
-    if type(i) == Interface:
-        if i.ismember:
-            continue
-        else:
-            thisint = {"newname": "",
-                       "vpc": "",
-                       "portchannel": "",
-                       "name": str(i),
-                       "description": i.description if hasattr(i, "description") else ""}
-            allintdata.append(thisint)
+    # We don't care about members of other objects
+    if i.ismember:
+        continue
+    elif type(i) == PortChannel and len(i.members) == 0:
+        continue
+    elif type(i) == Vpc and (len(i.members[0].members) + len(i.members[1].members) == 0):
+        continue
+    else:
+        thisint = {"newname": "",
+                   "vpc": "",
+                   "portchannel": "",
+                   "name": str(i),
+                   "description": i.description if hasattr(i, "description") else ""}
+        allintdata.append(thisint)
 
-    elif type(i) == PortChannel and not i.ismember:
+    if type(i) == PortChannel and not i.ismember:
         for member in i.members:
             thisint = {"newname": "",
                        "vpc": "",
