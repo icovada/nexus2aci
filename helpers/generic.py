@@ -83,7 +83,7 @@ def find_path_endpoints(moDir):
     for path in double_path:
         node_a = int(path.nodeAId)
         node_b = int(path.nodeBId)
-        path_endpoints[(node_a,node_b)] = path
+        path_endpoints[(node_a ,node_b)] = path
     
     return path_endpoints
 
@@ -114,13 +114,3 @@ def safe_string(string):
         raise SyntaxError("Invalid string "+string)
 
     return string
-
-def leaf_str_to_tuple(leafs):
-    if "," in leafs:
-        leafarr = leafs.split(",")
-        assert len(leafarr) == 2
-        leaves = (int(leafarr[0]), int(leafarr[1]))
-    else:
-        leaves = (int(leafs),)
-
-    return leaves
