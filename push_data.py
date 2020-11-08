@@ -180,6 +180,7 @@ for tenant in clean_tenant_list:
                 added = added + 1
 
             thisepg = thisapp.loc[thisapp['EPG'] == epg]
+            assert len(thisepg) == 1
             bd_list = thisepg.BD.unique().tolist()
             clean_bd_list = [helpers.generic.safe_string(x) for x in bd_list if str(x) != 'nan']
             assert len(clean_bd_list) == 1
@@ -192,6 +193,7 @@ for tenant in clean_tenant_list:
             for bd in clean_bd_list:
                 # Need to check both that the BD exists and that is it linked to the EPG
                 thisbd = thisepg.loc[thisepg['BD'] == bd]
+                assert len(thisbd) == 1
                 thisrow = thisbd.iloc[0]
                 # Check if BD exists
                 if bd in fabric_epgfkepgbdtnFvBDNames:
@@ -236,6 +238,10 @@ for tenant in clean_tenant_list:
                     #print(f"Found link between BD {bdobject.name} and VRF {vrfobject.name}")
                     found = found + 1
                 else:
+                    try:
+                        assert len(fabric_bdfkbdvrftnFvCtxNames) == 0
+                    except AssertionError:
+                        raise AssertionError(f"BD {bd} already points to another VRF!")
                     fkvrfobject = RsCtx(bdobject, tnFvCtxName=vrfobject.name)
                     fabricconfig.addMo(fkvrfobject)
                     print(f"CREATED link between BD {bdobject.name} and VRF {vrfobject.name}")
