@@ -1,7 +1,7 @@
 from objects import PortChannel, Vpc, Interface
 from cobra.model.infra import AccBndlGrp, PortBlk, RsLacpPol
-from cobra.mit.request import ConfigRequest
 import policymappings
+
 
 def create_bundle_interface_polgrp(interface, parent, *args, **kwargs):
     if type(interface) == PortChannel:
@@ -19,7 +19,8 @@ def create_bundle_interface_polgrp(interface, parent, *args, **kwargs):
             lacp = interface.protocol
         except AssertionError:
             # protocol value not in lacp_modes
-            raise AssertionError("Unknown protocol value " + str(interface.protocol) + ", set it in policymappings.lacp_modes")
+            raise AssertionError("Unknown protocol value " + str(
+                interface.protocol) + ", set it in policymappings.lacp_modes")
     else:
         # protocol not in interface
         lacp = "on"
@@ -35,7 +36,7 @@ def create_port_block(interface, interfaceselector):
     leaf, card, port = interface.get_newname().split("/")
     block = PortBlk(interfaceselector,
                     f"ethernet_{port}",
-                    descr=interface.description, 
+                    descr=interface.description,
                     fromCard=int(card),
                     toCard=int(card),
                     fromPort=interface.port[0],
@@ -43,12 +44,13 @@ def create_port_block(interface, interfaceselector):
 
     return block
 
+
 def check_port_block(port_block: PortBlk, switch_profiles: dict, fabric_allportblocks: list, leaf_tuple: tuple):
     """
     Find all port blocks inside all interface selectors in a leaf interface profile
     for a leaf, across all leaf profiles, check input port block does not use
     any of the already defined ports
-    
+
     Parameters:
     - port_block (PortBlk): PortBlk to check
     - switch_profiles (dict): Output of helpers.generic.find_switch_profiles()
@@ -72,17 +74,18 @@ def check_port_block(port_block: PortBlk, switch_profiles: dict, fabric_allportb
 
         print("Get port blocks in", leafintprofile)
         blocks = [x for x in fabric_allportblocks if leafintprofile in str(x.dn)
-                                                  and int(x.fromPort) <= port_block.fromPort
-                                                  and int(x.toPort) >= port_block.toPort
-                                                  and int(x.fromCard) <= port_block.fromCard
-                                                  and int(x.toCard) >= port_block.toCard]
+                  and int(x.fromPort) <= port_block.fromPort
+                  and int(x.toPort) >= port_block.toPort
+                  and int(x.fromCard) <= port_block.fromCard
+                  and int(x.toCard) >= port_block.toCard]
         allblocks = allblocks + blocks
 
     if len(allblocks) == 1:
         print("INVALID PORT BLOCK")
         return False
     elif len(allblocks) > 1:
-        raise AssertionError(f"Port block {port_block.fromPort} to {port_block.toPort}, parent {str(port_block._BaseMo__parentDn)} overlaps with another block")
+        raise AssertionError(
+            f"Port block {port_block.fromPort} to {port_block.toPort}, parent {str(port_block._BaseMo__parentDn)} overlaps with another block")
     else:
         print("OK PORT BLOCK")
         return True
@@ -93,7 +96,7 @@ def compare_port_block(port_block: PortBlk, switch_profiles: dict, fabric_allpor
     Compare a new port block object to one coming from the fabric
 
     Suggested to use only after getting True from check_port_block()
-    
+
     Parameters:
     - port_block (PortBlk): PortBlk to check
     - switch_profiles (dict): Output of helpers.generic.find_switch_profiles()
@@ -117,23 +120,23 @@ def compare_port_block(port_block: PortBlk, switch_profiles: dict, fabric_allpor
 
         print("Get port blocks in", leafintprofile)
         blocks = [x for x in fabric_allportblocks if leafintprofile in str(x.dn)
-                                                  and int(x.fromPort) <= port_block.fromPort
-                                                  and int(x.toPort) >= port_block.toPort
-                                                  and int(x.fromCard) <= port_block.fromCard
-                                                  and int(x.toCard) >= port_block.toCard]
+                  and int(x.fromPort) <= port_block.fromPort
+                  and int(x.toPort) >= port_block.toPort
+                  and int(x.fromCard) <= port_block.fromCard
+                  and int(x.toCard) >= port_block.toCard]
         allblocks = allblocks + blocks
-    
 
     if len(allblocks) == 1:
         oneblock = allblocks[0]
         if (str(port_block._BaseMo__parentDn) == str(oneblock._BaseMo__parentDn)
-            and str(port_block.fromPort) == str(oneblock.fromPort)
-            and str(port_block.toPort) == str(oneblock.toPort)
-            and str(port_block.fromCard) == str(oneblock.fromCard)
-            and str(port_block.toCard) == str(oneblock.toCard)):
+                and str(port_block.fromPort) == str(oneblock.fromPort)
+                and str(port_block.toPort) == str(oneblock.toPort)
+                and str(port_block.fromCard) == str(oneblock.fromCard)
+                and str(port_block.toCard) == str(oneblock.toCard)):
 
             return True
         else:
             return False
     else:
-        raise AssertionError(f"Something went wrong. I found {len(allblocks)} port blocks")
+        raise AssertionError(
+            f"Something went wrong. I found {len(allblocks)} port blocks")
