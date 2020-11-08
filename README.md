@@ -48,8 +48,6 @@ Do not touch the first column. You may delete lines if you won't need those inte
 Ethernet interfaces can be expressed in four ways:
 * Single interfaces: `100/1/1` (leaf/card/port)
 * Interface ranges: `100/1/1-5`
-* Leaf pairs: `100,150/1/1`
-* A combination of leaf pairs and interface ranges: `100,150/1/1-5`
 
 Port channels and VPCs must only be filled out with a name, without specifying leaf and card
 
@@ -59,7 +57,7 @@ Port channels and VPCs must only be filled out with a name, without specifying l
 * Run `generate_excel.py`
 * Open `excelout.xlsx` and fill in the form or delete unused VLANs
 
-## excelreader.py
+## push_data.py
 * Run all previous steps
 * Fill out `policymappings.py` with the names of your LACP policy profiles. Do NOT edit the dictionary keys
 * Fill out `defaults.py`, especially "POLICY_GROUP_ACCESS". Change it into the default policy group name for access interfaces. Change the rest as you see fit.
