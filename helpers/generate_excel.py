@@ -31,32 +31,7 @@ def generate_excel():
         pass
 
     parsedconfs = []
-    # Define how to transform data from nexus into ACI object names
 
-    def epg(rowdict):
-        if 'description' in rowdict:
-            return rowdict['Vlan name'] + "-GDC_EPG"
-
-    def anp(rowdict):
-        if 'vrf' in rowdict:
-            step1 = rowdict['vrf'].replace("VRF-", "")
-            step2 = step1 + "-GDC_ANP"
-            return step2
-
-    def bd(rowdict):
-        if 'description' in rowdict:
-            return row['Vlan name'] + "-GDC_BD"
-
-    def vrf(rowdict):
-        if 'vrf' in rowdict:
-            step1 = rowdict['vrf'].replace("VRF-", "")
-            step2 = step1 + "-GDC_VRF"
-            return step2
-
-    def tenant(rowdict):
-        pass
-
-    parsedconfs = []
     for k, v in entiredc.items():
         for i in v:
             parsedconfs.append(ciscoconfparse.CiscoConfParse(i))
