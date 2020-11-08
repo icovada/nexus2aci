@@ -4,20 +4,21 @@ import ciscoconfparse
 from typing import List, Dict, Any
 from objects import Interface, PortChannel, Vpc
 
-def allowed_vlan_to_list(vlanlist:str, l2dict:dict=None) -> List[int]:
+
+def allowed_vlan_to_list(vlanlist: str, l2dict: dict = None) -> List[int]:
     """
     Expands vlan ranges and checks if the vlan is in l2dict
-    
+
     Args:
       - vlanlist (str): String of vlans from config, i.e. 1,2,3-5
       - l2dict (dict): Output of  `parse_vlan_l2`
-    
+
     Returns:
       - list
     """
 
     split = vlanlist.split(",")
-    outlist:List[int] = []
+    outlist: List[int] = []
     for vlan in split:
         if "-" in vlan:
             begin, end = vlan.split("-")
@@ -32,7 +33,7 @@ def allowed_vlan_to_list(vlanlist:str, l2dict:dict=None) -> List[int]:
     return outlist
 
 
-def parse_vlan_l2(conf:ciscoconfparse.CiscoConfParse, l2dict:Dict[int, Dict[str, str]]=None) -> Dict[int, Dict[str, str]]:
+def parse_vlan_l2(conf: ciscoconfparse.CiscoConfParse, l2dict: Dict[int, Dict[str, str]] = None) -> Dict[int, Dict[str, str]]:
     if l2dict is None:
         l2dict = {1: {}}
 
@@ -51,13 +52,12 @@ def parse_vlan_l2(conf:ciscoconfparse.CiscoConfParse, l2dict:Dict[int, Dict[str,
     return l2dict
 
 
-def parse_svi(conf:ciscoconfparse.CiscoConfParse, svidict:dict) -> dict:
+def parse_svi(conf: ciscoconfparse.CiscoConfParse, svidict: dict) -> dict:
     """
     Returns a dictionary with vlan names and l3 info.
     'svidict' must be output of parse_vlan_l2
     """
 
-    
     svis = conf.find_objects(r"^interface Vlan")
     for svi in svis:
         # Cut away "interface Vlan"
@@ -102,7 +102,7 @@ def parse_svi(conf:ciscoconfparse.CiscoConfParse, svidict:dict) -> dict:
     return svidict
 
 
-def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
+def parse_switched_interface(interfaces: list, l2dict: dict = None) -> list:
     # Parse switched interface and expand vlan list
     # l2dict is passed through to allowed_vlan_to_list
     thisswitch = []
@@ -129,7 +129,7 @@ def parse_switched_interface(interfaces:list, l2dict:dict=None) -> list:
         is_l3 = True
         for line in eth.re_search_children("switchport"):
             is_l3 = False
-        
+
         if is_l3:
             continue
 
@@ -246,7 +246,7 @@ def match_port_channel(one_nexus_config: list) -> list:
     return one_nexus_config
 
 
-def match_vpc(sw1:list, sw2:list) -> list:
+def match_vpc(sw1: list, sw2: list) -> list:
     """
     Args:
       - sw1 (list): List containing PortChannels
@@ -298,28 +298,32 @@ def parse_nexus_pair_l2(conf1: str, conf2: str, cage: str) -> list:
         - conf1 (str): File path to first Nexus in pair
         - conf2 (str): File path to second Nexus in pair
         - cage (str): Cage ID
-    
+
     Returns:
         - dict.
     """
-    sw1:ciscoconfparse.ciscoconfparse.CiscoConfParse = ciscoconfparse.CiscoConfParse(conf1)
-    sw2:ciscoconfparse.ciscoconfparse.CiscoConfParse = ciscoconfparse.CiscoConfParse(conf2)
+    sw1: ciscoconfparse.ciscoconfparse.CiscoConfParse = ciscoconfparse.CiscoConfParse(
+        conf1)
+    sw2: ciscoconfparse.ciscoconfparse.CiscoConfParse = ciscoconfparse.CiscoConfParse(
+        conf2)
 
     # Combine info for VLANs for all switches.
     # Just one switch could do, but why not showing off?
-    sw1_l2:dict = parse_vlan_l2(sw1)
-    l2dict:dict = parse_vlan_l2(sw2, sw1_l2)
+    sw1_l2: dict = parse_vlan_l2(sw1)
+    l2dict: dict = parse_vlan_l2(sw2, sw1_l2)
 
     # Filter all switched interfaces from access switches
-    sw1_switched:list = sw1.find_objects(r"^interface (port-channel|Ethernet).*")
-    sw2_switched:list = sw2.find_objects(r"^interface (port-channel|Ethernet).*")
+    sw1_switched: list = sw1.find_objects(
+        r"^interface (port-channel|Ethernet).*")
+    sw2_switched: list = sw2.find_objects(
+        r"^interface (port-channel|Ethernet).*")
 
     sw1_parsed = parse_switched_interface(sw1_switched, l2dict)
 
     for interface in sw1_parsed:
         interface.switch = 1
         interface.cage = cage
-    
+
     sw2_parsed = parse_switched_interface(sw2_switched, l2dict)
 
     for interface in sw2_parsed:
