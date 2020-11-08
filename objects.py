@@ -54,11 +54,7 @@ class Interface():
         else:
             leaf, card, port = newname.split("/")
     
-            if "," in leaf:
-                leafa, leafb = leaf.split(",")
-                self.leaf = (int(leafa), int(leafb))
-            else:
-                self.leaf = (int(leaf),)
+            self.leaf = (int(leaf),)
     
             self.card = int(card)
     
@@ -69,11 +65,8 @@ class Interface():
                 self.port = range(int(port), int(port)+1)
 
     def get_newname(self):
-        if len(self.leaf) == 1:
-            leaf = str(self.leaf[0])
-        else:
-            leaf = "(" + str(self.leaf[0]) + "," + str(self.leaf[1]) + ")"
-
+        leaf = str(self.leaf[0])
+        
         card = str(self.card)
 
         if len(self.port) == 1:
