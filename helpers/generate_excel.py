@@ -1,6 +1,5 @@
 from typing import Optional, Dict
 import ciscoconfparse
-import yaml
 from libs import parse_svi, parse_vlan_l2
 from filelist import entiredc
 import pandas as pd
