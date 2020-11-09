@@ -318,9 +318,9 @@ for interface in networkdata:
         config.addMo(lacp_pol)
 
         config.addMo(RsAttEntP(bundle, tDn="uni/infra/attentp-Physical_AEEP"))
-        config.addMo(RsCdpIfPol(bundle, tDn="uni/infra/cdpIfP-CDP_Off"))
-        config.addMo(RsL2IfPol(bundle, tDn="uni/infra/l2IfP-L2_VLAN_Global"))
-        config.addMo(RsLldpIfPol(bundle, tDn="uni/infra/lldpIfP-LLDP_On"))
+        config.addMo(RsCdpIfPol(bundle, tnCdpIfPolName="CDP_Off"))
+        config.addMo(RsL2IfPol(bundle, tnL2IfPolName="L2_VLAN_Global"))
+        config.addMo(RsLldpIfPol(bundle, tnLldpIfPolName="LLDP_On"))
 
         # Hardcoded data, change at will
 
