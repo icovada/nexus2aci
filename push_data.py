@@ -9,6 +9,7 @@ from cobra.mit.session import LoginSession
 from cobra.model.fv import Tenant, Ap, AEPg, BD, RsBd, RsPathAtt, Ctx, RsCtx
 from cobra.mit.request import ConfigRequest
 from cobra.model.infra import HPortS, RsAccBaseGrp
+from cobra.model.infra import RsAttEntP, RsCdpIfPol, RsL2IfPol, RsLldpIfPol
 from helpers.int import check_port_block, compare_port_block
 
 from objects import Interface, PortChannel, Vpc
@@ -315,6 +316,14 @@ for interface in networkdata:
         bundle, lacp_pol = helpers.int.create_bundle_interface_polgrp(interface, bundleparent)
         config.addMo(bundle)
         config.addMo(lacp_pol)
+
+        config.addMo(RsAttEntP(bundle, tDn="uni/infra/attentp-Physical_AEEP"))
+        config.addMo(RsCdpIfPol(bundle, tDn="uni/infra/cdpIfP-CDP_Off"))
+        config.addMo(RsL2IfPol(bundle, tDn="uni/infra/l2IfP-L2_VLAN_Global"))
+        config.addMo(RsLldpIfPol(bundle, tDn="uni/infra/lldpIfP-LLDP_On"))
+
+        # Hardcoded data, change at will
+
 
         # Add members in policy group
         intloop = interface.members
