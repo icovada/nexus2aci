@@ -345,7 +345,7 @@ for interface in networkdata:
                 else:
                     accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accportgrp-" + defaults.POLICY_GROUP_ACCESS)                
                 config.addMo(accbasegrp)
-                print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.get_newname}")
+                print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.get_newname()}")
                 
                 added = added + 1
 
