@@ -68,24 +68,28 @@ def check_port_block(port_block: PortBlk, switch_profiles: dict, fabric_allportb
         newleaves = set(x for x in list(switch_profiles) if leaf in x)
         leafprofileids.update(newleaves)
 
-    allblocks = []
+    allblocks = set()
     for ids in leafprofileids:
         leafintprofile = str(switch_profiles[ids]['leafintprofile'].dn)
 
         print("Get port blocks in", leafintprofile)
-        blocks = [x for x in fabric_allportblocks if leafintprofile in str(x.dn)
-                  and int(x.fromPort) <= port_block.fromPort
-                  and int(x.toPort) >= port_block.toPort
-                  and int(x.fromCard) <= port_block.fromCard
-                  and int(x.toCard) >= port_block.toCard]
-        allblocks = allblocks + blocks
+        for port in range(port_block.fromPort, port_block.toPort +1):
+            for card in range(port_block.fromCard, port_block.toCard +1):
+                blocks = [x for x in fabric_allportblocks if leafintprofile in str(x.dn)
+                          and int(x.fromPort) <= port
+                          and int(x.toPort) >= port
+                          and int(x.fromCard) <= card
+                          and int(x.toCard) >= card]
+                # Add all foudn blocks in the set
+                for block in blocks:
+                    allblocks.add(block)
 
     if len(allblocks) == 1:
         print("Port Block already exists, check equality with compare_port_block()")
         return False
     elif len(allblocks) > 1:
         raise AssertionError(
-            f"Port block {port_block.fromPort} to {port_block.toPort}, parent {str(port_block._BaseMo__parentDn)} overlaps with another block")
+            f"Port block {port_block.fromPort} to {port_block.toPort}, parent {str(port_block._BaseMo__parentDn)} overlaps with another block out of {[str(x.dn) for x in allblocks]}")
     else:
         print("Port Block free")
         return True
