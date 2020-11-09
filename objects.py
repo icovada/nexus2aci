@@ -158,7 +158,7 @@ class PortChannel(Interface):
             if len(group) == 1:
                 port_ranges.append(range(group[0], group[0]+1))
             else:
-                port_ranges.append(range(group[0], group[-1]))
+                port_ranges.append(range(group[0], group[-1]+1))
 
         newmembers = []
 
