@@ -329,7 +329,7 @@ for interface in networkdata:
 
             try:
                 if isinstance(interface, PortChannel):
-                    interfaceselector = switch_profiles[member.leaf]['portselectors'][interface.get_newname()]
+                    interfaceselector = switch_profiles[member.leaf]['portselectors'][interface.get_newname() +"_PolGrp"]
                 else:
                     interfaceselector = switch_profiles[member.leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS]
                 print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.get_newname()}")
@@ -341,7 +341,7 @@ for interface in networkdata:
                 config.addMo(interfaceselector)
 
                 if isinstance(interface, PortChannel):
-                    accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface.get_newname())
+                    accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface.get_newname() + "_PolGrp")
                 else:
                     accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accportgrp-" + defaults.POLICY_GROUP_ACCESS)                
                 config.addMo(accbasegrp)
@@ -413,9 +413,9 @@ for epg in fabric_allepgs:
 
             # Need a path for every interface in case of a range
             if type(interface) == PortChannel:
-                staticpath = RsPathAtt(epg, tDn=str(path_po[interface.get_newname()].dn))
+                staticpath = RsPathAtt(epg, tDn=str(path_po[interface.get_newname() + "_PolGrp"].dn))
             elif type(interface) == Vpc:
-                staticpath = RsPathAtt(epg, tDn=str(path_vpc[interface.get_newname()].dn))
+                staticpath = RsPathAtt(epg, tDn=str(path_vpc[interface.get_newname() + "_PolGrp"].dn))
             elif type(interface) == Interface:
                 assert len(interface.leaf) == 1
                 assert len(interface.port) == 1
