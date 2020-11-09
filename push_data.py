@@ -431,7 +431,7 @@ for epg in fabric_allepgs:
                 else:
                     staticpath.mode = "native"
 
-                staticpath.instrImedcy = "immediate"
+                staticpath.instrImedcy = "lazy"
                 staticpath.encap = "vlan-" + str(epg_tag_assoc[epg.name])
                 config.addMo(staticpath)
                 added = added + 1
