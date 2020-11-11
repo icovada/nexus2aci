@@ -218,7 +218,7 @@ def parse_switched_interface(interfaces: list, l2dict: dict = None) -> list:
 
     for interface in thisswitch:
         # Remove interfaces with only names
-        if len(interface.allowed_vlan) == 0 and interface.native_vlan is not None:
+        if len(interface.allowed_vlan) == 0 and interface.native_vlan is None:
             thisswitch.remove(interface)
 
     return thisswitch
