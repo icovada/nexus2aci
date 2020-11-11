@@ -7,6 +7,7 @@ l3.yml
 out.yml
 .devcontainer/
 *.nxos
+*.intstatus
 *.bin
 *.csv
 *.whl
