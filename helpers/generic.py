@@ -89,7 +89,7 @@ def find_path_endpoints(moDir):
 
 def find_path_vpc(moDir):
     vpcs = {}
-    propfilter = 'and(not(wcard(fabricPathEp.dn,"__ui_")),and(eq(fabricPathEp.lagT,"node"),wcard(fabricPathEp.dn,"^topology/pod-[\d]*/protpaths-")))'
+    propfilter = 'and(eq(fabricPathEp.lagT,"node"),wcard(fabricPathEp.dn,"^topology/pod-[\d]*/protpaths-"))'
     vpc_paths = moDir.lookupByClass("fabricPathEp", propFilter=propfilter)
 
     for path in vpc_paths:
@@ -100,7 +100,7 @@ def find_path_vpc(moDir):
 
 def find_path_po(moDir):
     pos = {}
-    propfilter = 'and(not(wcard(fabricPathEp.dn,"__ui_")),eq(fabricPathEp.lagT,"link"))'
+    propfilter = 'and(eq(fabricPathEp.lagT,"link"))'
     po_paths = moDir.lookupByClass("fabricPathEp", propFilter=propfilter)
 
     for path in po_paths:
