@@ -1,7 +1,7 @@
 import csv
 import pickle
 from objects import Interface, PortChannel, Vpc
-from libs import parse_nexus_pair_l2
+from libs import parse_nexus_pair_l2, parse_show_interface_status
 from filelist import entiredc
 from helpers.generate_excel import generate_excel
 
@@ -9,7 +9,7 @@ from helpers.generate_excel import generate_excel
 parseddc = []
 
 for k, v in entiredc.items():
-    parseddc = parseddc + parse_nexus_pair_l2(v[0], v[1], k)
+    parseddc = parseddc + parse_nexus_pair_l2(v['conf'][0], v['conf'][1], k)
 
 for interface in parseddc:
     try:
@@ -17,6 +17,11 @@ for interface in parseddc:
     except AttributeError:
         pass
 
+for k, v in entiredc.items():
+    if "intstatus" in v:
+        parse_show_interface_status(parseddc, k, 1, v['intstatus'][0])
+        parse_show_interface_status(parseddc, k, 2, v['intstatus'][1])
+    
 
 # Export interface names for renaming
 allintdata = []
@@ -33,7 +38,9 @@ for i in parseddc:
                    "vpc": "",
                    "portchannel": "",
                    "name": str(i),
-                   "description": i.description if i.description is not None else ""}
+                   "description": i.description if i.description is not None else "",
+                   "speed": i.speed,
+                   "status": i.intstatus}
         allintdata.append(thisint)
 
     if type(i) == PortChannel and not i.ismember:
@@ -42,7 +49,9 @@ for i in parseddc:
                        "vpc": "",
                        "portchannel": str(i),
                        "name": str(member),
-                       "description": member.description if member.description is not None else ""}
+                       "description": member.description if member.description is not None else "",
+                       "speed": member.speed,
+                       "status": member.intstatus}
             allintdata.append(thisint)
 
     elif type(i) == Vpc:
@@ -52,14 +61,16 @@ for i in parseddc:
                            "vpc": str(i),
                            "portchannel": str(pomember),
                            "name": str(member),
-                           "description": member.description if member.description is not None else ""}
+                           "description": member.description if member.description is not None else "",
+                           "speed": member.speed,
+                           "status": member.intstatus}
                 allintdata.append(thisint)
     
 
 
 with open("intnames.csv", "w") as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=[
-        "name", "vpc", "portchannel", "description", "newname"])
+        "name", "vpc", "portchannel", "description", "status", "speed", "newname"])
     writer.writeheader()
     writer.writerows(allintdata)
 

@@ -33,7 +33,7 @@ def generate_excel():
     parsedconfs = []
 
     for k, v in entiredc.items():
-        for i in v:
+        for i in v["conf"]:
             parsedconfs.append(ciscoconfparse.CiscoConfParse(i))
 
     l2dict: Optional[Dict[int, Dict[str, str]]] = None

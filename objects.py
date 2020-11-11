@@ -19,6 +19,8 @@ class Interface():
         self.card: int = kwargs.get("card", None)
         self.port: range = kwargs.get("port", None)
         self.is_superseeded: bool = False
+        self.intstatus: str = ""
+        self.speed: str = ""
 
     def __str__(self) -> str:
         outname = self.name

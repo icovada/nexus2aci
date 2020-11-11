@@ -1,12 +1,17 @@
 # parse configs for access and distribution switches
 # you should theoretically add all switches in the DC
 
-entiredc = {'agg': ['config/AGGSNANGDC-1.nxos', 'config/AGGSNANGDC-2.nxos'],
-            'aggp': ['config/AGGSNANGDCP-1.nxos', 'config/AGGSNANGDCP-2.nxos'],
-            'core': ['config/CORESNANGDC-1.nxos', 'config/CORESNANGDC-2.nxos'],
-            'H1-2': ['config/SWISNA-NGDC5K-H1.nxos', 'config/SWISNA-NGDC5K-H2.nxos'],
-            'H3-4': ['config/SWISNA-NGDC5K-H3.nxos', 'config/SWISNA-NGDC5K-H4.nxos'],
-            'L1-2': ['config/SWISNA-NGDC5K-L1.nxos', 'config/SWISNA-NGDC5K-L2.nxos'],
-            'L3-4': ['config/SWISNA-NGDC5K-L3.nxos', 'config/SWISNA-NGDC5K-L4.nxos'],
-            'L5-6': ['config/SWISNA-NGDC5K-L5.nxos', 'config/SWISNA-NGDC5K-L6.nxos'],
+entiredc = {'agg': {"conf": ['config/AGGSNANGDC-1.nxos', 'config/AGGSNANGDC-2.nxos']},
+            'aggp': {"conf": ['config/AGGSNANGDCP-1.nxos', 'config/AGGSNANGDCP-2.nxos']},
+            'core': {"conf": ['config/CORESNANGDC-1.nxos', 'config/CORESNANGDC-2.nxos']},
+            'H1-2': {"conf": ['config/SWISNA-NGDC5K-H1.nxos', 'config/SWISNA-NGDC5K-H2.nxos'],
+                     "intstatus": ['config/SWISNA-NGDC5K-H1.intstatus', 'config/SWISNA-NGDC5K-H2.intstatus']},
+            'H3-4': {"conf": ['config/SWISNA-NGDC5K-H3.nxos', 'config/SWISNA-NGDC5K-H4.nxos'],
+                     "intstatus": ['config/SWISNA-NGDC5K-H3.intstatus', 'config/SWISNA-NGDC5K-H4.intstatus']},
+            'L1-2': {"conf": ['config/SWISNA-NGDC5K-L1.nxos', 'config/SWISNA-NGDC5K-L2.nxos'],
+                     "intstatus": ['config/SWISNA-NGDC5K-L1.intstatus', 'config/SWISNA-NGDC5K-L2.intstatus']},
+            'L3-4': {"conf": ['config/SWISNA-NGDC5K-L3.nxos', 'config/SWISNA-NGDC5K-L4.nxos'],
+                     "intstatus": ['config/SWISNA-NGDC5K-L3.intstatus', 'config/SWISNA-NGDC5K-L4.intstatus']},
+            'L5-6': {"conf": ['config/SWISNA-NGDC5K-L5.nxos', 'config/SWISNA-NGDC5K-L6.nxos'],
+                     "intstatus": ['config/SWISNA-NGDC5K-L5.intstatus', 'config/SWISNA-NGDC5K-L6.intstatus']},
             }

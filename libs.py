@@ -340,3 +340,34 @@ def parse_nexus_pair_l2(conf1: str, conf2: str, cage: str) -> list:
         interface.cage = cage
 
     return cage_config
+
+def parse_show_interface_status(parseddc: list, cage: str, switch: int, filepath: str) -> None:
+    with open(filepath, "r") as intstatusoutput:
+        intstatuslines = intstatusoutput.readlines()
+    
+    intstatus = []
+    # Parse "Eth1/10       to AGGSNANGDC1/2   connected trunk     full    10G     10Gbase-SR"
+    for x in intstatuslines:
+        statusdata = [x[0:13].strip(),
+                      x[14:32].strip(),
+                      x[33:42].strip(),
+                      x[43:52].strip(),
+                      x[53:60].strip(),
+                      x[61:68].strip()]
+        intstatus.append(statusdata)
+
+    for interface in parseddc:
+        if not isinstance(interface, Vpc):
+            if interface.cage == cage and interface.switch == switch:
+                if type(interface) == Interface:
+                    name: str = interface.name.replace("Ethernet", "Eth")
+                elif type(interface) == PortChannel:
+                    name: str = interface.name.replace("port-channel", "Po")
+                else:
+                    continue
+
+                for status in intstatus:
+                    if status[0] == name:
+                        interface.intstatus = status[2]
+                        interface.speed = status[5]
+                        break
