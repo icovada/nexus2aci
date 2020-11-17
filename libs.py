@@ -139,6 +139,8 @@ def parse_switched_interface(interfaces: list, l2dict: dict = None) -> list:
             mode = line.re_match(r"switchport mode (.*)$")
             if mode == 'fex-fabric':
                 is_fex = True
+            elif mode == "trunk":
+                thisint.allowed_vlan = [x for x in range(1, 4095)]
 
         if is_fex:
             thisswitch.append(thisint)
@@ -353,7 +355,8 @@ def parse_show_interface_status(parseddc: list, cage: str, switch: int, filepath
                       x[33:42].strip(),
                       x[43:52].strip(),
                       x[53:60].strip(),
-                      x[61:68].strip()]
+                      x[61:68].strip(),
+                      x[69:].strip()]
         intstatus.append(statusdata)
 
     for interface in parseddc:
@@ -370,4 +373,5 @@ def parse_show_interface_status(parseddc: list, cage: str, switch: int, filepath
                     if status[0] == name:
                         interface.intstatus = status[2]
                         interface.speed = status[5]
+                        interface.adapter = status[6]
                         break
