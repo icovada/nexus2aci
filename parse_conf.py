@@ -40,7 +40,8 @@ for i in parseddc:
                    "name": str(i),
                    "description": i.description if i.description is not None else "",
                    "speed": i.speed,
-                   "status": i.intstatus}
+                   "status": i.intstatus,
+                   "adapter": i.adapter}
         allintdata.append(thisint)
 
     if type(i) == PortChannel and not i.ismember:
@@ -51,7 +52,8 @@ for i in parseddc:
                        "name": str(member),
                        "description": member.description if member.description is not None else "",
                        "speed": member.speed,
-                       "status": member.intstatus}
+                       "status": member.intstatus,
+                       "adapter": i.adapter}
             allintdata.append(thisint)
 
     elif type(i) == Vpc:
@@ -63,14 +65,15 @@ for i in parseddc:
                            "name": str(member),
                            "description": member.description if member.description is not None else "",
                            "speed": member.speed,
-                           "status": member.intstatus}
+                           "status": member.intstatus,
+                           "adapter": i.adapter}
                 allintdata.append(thisint)
     
 
 
 with open("intnames.csv", "w") as csvfile:
     writer = csv.DictWriter(csvfile, fieldnames=[
-        "name", "vpc", "portchannel", "description", "status", "speed", "newname"])
+        "name", "vpc", "portchannel", "description", "status", "speed", "adapter", "newname"])
     writer.writeheader()
     writer.writerows(allintdata)
 

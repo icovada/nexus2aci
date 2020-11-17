@@ -21,6 +21,7 @@ class Interface():
         self.is_superseeded: bool = False
         self.intstatus: str = ""
         self.speed: str = ""
+        self.adapter: str = ""
 
     def __str__(self) -> str:
         outname = self.name
