@@ -53,7 +53,7 @@ for i in parseddc:
                        "description": member.description if member.description is not None else "",
                        "speed": member.speed,
                        "status": member.intstatus,
-                       "adapter": i.adapter}
+                       "adapter": member.adapter}
             allintdata.append(thisint)
 
     elif type(i) == Vpc:
@@ -66,7 +66,7 @@ for i in parseddc:
                            "description": member.description if member.description is not None else "",
                            "speed": member.speed,
                            "status": member.intstatus,
-                           "adapter": i.adapter}
+                           "adapter": member.adapter}
                 allintdata.append(thisint)
     
 
