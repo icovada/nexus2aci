@@ -317,7 +317,7 @@ for interface in networkdata:
         config.addMo(bundle)
         config.addMo(lacp_pol)
 
-        config.addMo(RsAttEntP(bundle, tDn="uni/infra/attentp-Physical_AEEP"))
+        config.addMo(RsAttEntP(bundle, tDn="uni/infra/attentp-Physical_AAEP"))
         config.addMo(RsCdpIfPol(bundle, tnCdpIfPolName="CDP_Off"))
         config.addMo(RsL2IfPol(bundle, tnL2IfPolName="L2_VLAN_Global"))
         config.addMo(RsLldpIfPol(bundle, tnLldpIfPolName="LLDP_On"))
