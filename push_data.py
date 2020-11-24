@@ -346,7 +346,7 @@ for interface in networkdata:
             except KeyError:
                 # Create port selector
                 interfaceselector = HPortS(switch_profiles[member.leaf]['leafintprofile'], int_selector_name, "range")
-                switch_profiles[member.leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS] = interfaceselector
+                switch_profiles[member.leaf]['portselectors'][int_selector_name] = interfaceselector
                 config.addMo(interfaceselector)
 
                 if isinstance(interface, PortChannel):
