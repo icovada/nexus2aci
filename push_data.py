@@ -60,7 +60,7 @@ for x in [x for x in networkdata if isinstance(x, PortChannel)]:
 # Shed interfaces that have been aggregated
 networkdata = [x for x in networkdata if not x.is_superseeded]
 
-tenant_list = excel.Tenant.unique().tolist()
+tenant_list = excel.TENANT.unique().tolist()
 # remove nan from list
 clean_tenant_list = [helpers.generic.safe_string(x) for x in tenant_list if str(x) != 'nan']
 
@@ -125,7 +125,7 @@ for tenant in clean_tenant_list:
         fabricconfig.addMo(tenantobj)
         print(f"CREATED Tenant: {tenantobj.name}")
 
-    thistenant = excel.loc[excel['Tenant'] == tenant]
+    thistenant = excel.loc[excel['TENANT'] == tenant]
     app_list = thistenant.ANP.unique().tolist()
     clean_app_list = [helpers.generic.safe_string(x) for x in app_list if str(x) != 'nan']
     allapp = []
@@ -248,7 +248,7 @@ for tenant in clean_tenant_list:
                     print(f"CREATED link between BD {bdobject.name} and VRF {vrfobject.name}")
                     added = added + 1
 
-            epg_tag_assoc[epgobject.name] = int(thisrow['Vlan ID'])
+            epg_tag_assoc[epgobject.name] = int(thisrow['VLAN id'])
 
                     # TODO: Add Subnets
                     # if isinstance(thisrow['netmask'], str):
