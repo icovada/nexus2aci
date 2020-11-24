@@ -40,7 +40,9 @@ def LEAF_SELECTOR(leaves):
 def POLICY_GROUP_BUNDLE(bundlemode, name):
     return f"{bundlemode}_GDC_{name}_PolGrp"
 
-POLICY_GROUP_ACCESS = f"access_SRV_1G-auto_PolGrp"
+POLICY_GROUP_ACCESS = {"1000": "access_SRV_1G-auto_PolGrp",
+                       "10G": "access_SRV_10G-auto_PolGrp"}
+
 UNSAFE_CHARACTER_REPLACE = {"&": "_e_",
                             " ": "_"}
 

@@ -308,7 +308,7 @@ for interface in networkdata:
         continue
 
     if type(interface) == Interface:
-        int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(defaults.POLICY_GROUP_ACCESS)
+        int_selector_name = defaults.xlate_policy_group_bundle_int_selector_name(defaults.POLICY_GROUP_ACCESS[interface.speed])
         intloop = [interface]
     else:
         # TODO: Check if it already exists
@@ -340,7 +340,7 @@ for interface in networkdata:
                 if isinstance(interface, PortChannel):
                     interfaceselector = switch_profiles[member.leaf]['portselectors'][interface.get_newname() +"_PolGrp"]
                 else:
-                    interfaceselector = switch_profiles[member.leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS]
+                    interfaceselector = switch_profiles[member.leaf]['portselectors'][defaults.POLICY_GROUP_ACCESS[interface.speed]]
                 print(f"Found Interface Selector {str(interfaceselector.dn)} for interface {interface.get_newname()}")
                 found = found + 1
             except KeyError:
@@ -352,7 +352,7 @@ for interface in networkdata:
                 if isinstance(interface, PortChannel):
                     accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accbundle-" + interface.get_newname() + "_PolGrp")
                 else:
-                    accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accportgrp-" + defaults.POLICY_GROUP_ACCESS)                
+                    accbasegrp = RsAccBaseGrp(interfaceselector, tDn="uni/infra/funcprof/accportgrp-" + defaults.POLICY_GROUP_ACCESS[interface.speed])                
                 config.addMo(accbasegrp)
                 print(f"CREATED Interface selector {str(interfaceselector.dn)} for {interface.get_newname()}")
                 
