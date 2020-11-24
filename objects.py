@@ -257,4 +257,7 @@ class Vpc(PortChannel):
         allinterfaces = allinterfaces + \
             self.members[0].members + self.members[1].members
 
+        for interface in allinterfaces:
+            interface.description = self._newname
+
         self.members = allinterfaces
