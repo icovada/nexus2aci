@@ -1,6 +1,8 @@
 # nexus2aci
 
-Goal of this project is to take a Nexus 7k/5k config and turn it into ACI configuration
+Goal of this project is to take a Nexus 7k/5k config and turn it into ACI configuration.
+
+It then spawned its own configuration parsing library, [netwalk](https://github.com/icovada/netwalk)
 
 # How to use
 
